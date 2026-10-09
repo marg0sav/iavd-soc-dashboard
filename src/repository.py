@@ -22,7 +22,7 @@ class IncidentRepository:
         if "EntityId" not in df.columns:
             raise ValueError("В CSV отсутствует столбец EntityId")
 
-        df["EntityId"] = df["EntityId"].str.strip()
+        df["EntityId"] = df["EntityId"].astype("string").str.strip()
 
         if df["EntityId"].isna().any() or df["EntityId"].eq("").any():
             raise ValueError("EntityId не должен быть пустым")
