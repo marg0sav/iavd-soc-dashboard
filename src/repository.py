@@ -17,7 +17,7 @@ class IncidentRepository:
             )
         """
         df = pd.read_parquet(self.csv_path)
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.astype(str).str.strip()
 
         if "EntityId" not in df.columns:
             raise ValueError("В CSV отсутствует столбец EntityId")
