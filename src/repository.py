@@ -7,15 +7,6 @@ class IncidentRepository:
         self._df = self._load()
         
     def _load(self) -> pd.DataFrame:
-        """
-        df = pd.read_csv(
-            self.csv_path,
-            sep=None,
-            engine="python",
-            encoding="utf-8-sig",
-            dtype="string",
-            )
-        """
         df = pd.read_parquet(self.csv_path)
         df.columns = df.columns.astype(str).str.strip()
 
