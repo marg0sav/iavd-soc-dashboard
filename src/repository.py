@@ -2,16 +2,16 @@ from pathlib import Path
 import pandas as pd
 
 class IncidentRepository:
-    def __init__(self, csv_path: str | Path):
-        self.csv_path = Path(csv_path)
+    def __init__(self, dataset_path: str | Path):
+        self.dataset_path = Path(dataset_path)
         self._df = self._load()
         
     def _load(self) -> pd.DataFrame:
-        df = pd.read_parquet(self.csv_path)
+        df = pd.read_parquet(self.dataset_path)
         df.columns = df.columns.astype(str).str.strip()
 
         if "EntityId" not in df.columns:
-            raise ValueError("В CSV отсутствует столбец EntityId")
+            raise ValueError("В датасете отсутствует столбец EntityId")
 
         df["EntityId"] = df["EntityId"].astype("string").str.strip()
 
