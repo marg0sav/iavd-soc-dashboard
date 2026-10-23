@@ -4,6 +4,7 @@ import taipy.gui.builder as tgb
 from taipy.gui import Gui
 
 from src.service import IncidentService, QUEUE_COLUMNS
+from src.analytics import build_incident_chart, extract_visible_range
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
@@ -16,8 +17,46 @@ severity_options = ["Все"]
 selected_title = "Выберите инцидент"
 queue_count = 0
 
+stats_period = "30 дней"
+
+stats_period_options = [
+    "24 часа",
+    "7 дней",
+    "30 дней",
+    "Год",
+    "Весь период",
+]
+
+stats_figure = None
+stats_zoom_range = None
+
 _service: IncidentService | None = None
 
+def on_stats_period_change(state, var_name, value):
+    incidents = _service.repository.get_all()
+
+    state.stats_zoom_range = None
+    state.stats_figure = build_incident_chart(
+        incidents,
+        period=value,
+        visible_range=None,
+    )
+
+def on_stats_range_change(state, id, payload):
+    visible_range = extract_visible_range(payload)
+
+    if visible_range == state.stats_zoom_range:
+        return
+
+    state.stats_zoom_range = visible_range
+
+    incidents = _service.repository.get_all()
+
+    state.stats_figure = build_incident_chart(
+        incidents,
+        period=state.stats_period,
+        visible_range=visible_range,
+    )
 
 def load_incident(state, entity_id):
     state.card_df = _service.get_card(entity_id)
@@ -71,8 +110,25 @@ def build_page():
     with tgb.Page() as page:
         tgb.text(
             "# Очередь инцидентов SOC",
-            mode="md",
-        )
+            mode="md",)
+
+        
+        with tgb.part(class_name="panel"):
+            tgb.text("## Динамика новых инцидентов", mode="md")
+
+            tgb.toggle(
+                "{stats_period}",
+                lov="{stats_period_options}",
+                on_change=on_stats_period_change,
+                class_name="stats-period-toggle",
+            )
+
+            tgb.chart(
+                figure="{stats_figure}",
+                width="100%",
+                id="incident-stats-chart",
+                on_range_change=on_stats_range_change,
+            )
 
         with tgb.part(class_name="panel"):
             tgb.input(
@@ -123,12 +179,20 @@ def build_page():
 
 
 def create_gui(service: IncidentService) -> Gui:
-    global _service, queue_df, severity_options, queue_count
+    global _service, queue_df, severity_options
+    global queue_count, stats_figure
 
     _service = service
+
     queue_df = service.get_queue()
     queue_count = len(queue_df)
     severity_options = service.get_severities()
+
+    stats_figure = build_incident_chart(
+        service.repository.get_all(),
+        period=stats_period,
+        visible_range=None,
+    )
 
     return _gui
   
