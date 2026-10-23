@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+from src.constants import Col
 
 SEVERITIES = {
     "Низкая": ["низкая", "low"],
@@ -23,10 +24,10 @@ PERIOD_LABELS = ["24 часа", "7 дней", "30 дней", "Год", "Весь
 
 def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
     data = df.copy()
-    data["Создан"] = pd.to_datetime(data["Создан"], utc=True, errors="coerce")
-    data = data.dropna(subset=["Создан"]).copy()
+    data[Col.CREATED] = pd.to_datetime(data[Col.CREATED], utc=True, errors="coerce")
+    data = data.dropna(subset=[Col.CREATED]).copy()
 
-    severity = data["Критичность"].astype("string").str.strip().str.casefold()
+    severity = data[Col.SEVERITY].astype("string").str.strip().str.casefold()
     data["Уровень"] = "Не указана"
 
     for level, aliases in SEVERITIES.items():
@@ -36,7 +37,7 @@ def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _get_period_bounds(df: pd.DataFrame, period: str):
-    end = df["Создан"].max()
+    end = df[Col.CREATED].max()
 
     if period == "24 часа":
         start = end - pd.Timedelta(hours=24)
@@ -47,7 +48,7 @@ def _get_period_bounds(df: pd.DataFrame, period: str):
     elif period == "Год":
         start = end - pd.DateOffset(years=1)
     else:
-        start = df["Создан"].min()
+        start = df[Col.CREATED].min()
 
     return start, end
 
@@ -78,8 +79,8 @@ def _choose_frequency(start, end, period=None):
 
 def _prepare_grouped(df, start, end, freq):
     data = df[
-        (df["Создан"] >= start)
-        & (df["Создан"] < end)
+        (df[Col.CREATED] >= start)
+        & (df[Col.CREATED] < end)
     ].copy()
 
     start_naive = start.tz_localize(None)
@@ -114,7 +115,7 @@ def _prepare_grouped(df, start, end, freq):
     )
 
     data["Время"] = floor_time(
-        data["Создан"].dt.tz_localize(None)
+        data[Col.CREATED].dt.tz_localize(None)
     )
 
     grouped = (

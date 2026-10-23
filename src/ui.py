@@ -3,16 +3,17 @@ import pandas as pd
 import taipy.gui.builder as tgb
 from taipy.gui import Gui
 
-from src.service import IncidentService, QUEUE_COLUMNS
+from src.constants import ALL
+from src.service import IncidentService, QUEUE_COLUMNS, QUEUE_ID, empty_card
 from src.analytics import build_incident_chart, extract_visible_range
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
-card_df = pd.DataFrame(columns=["Поле", "Значение"])
+card_df = empty_card()
 
 search = ""
-severity = "Все"
-severity_options = ["Все"]
+severity = ALL
+severity_options = [ALL]
 
 selected_title = "Выберите инцидент"
 queue_count = 0
@@ -73,14 +74,12 @@ def update_queue(state):
     state.queue_count = len(queue)
 
     if queue.empty:
-        state.card_df = pd.DataFrame(
-            columns=["Поле", "Значение"]
-        )
+        state.card_df = empty_card()
         state.selected_title = "Инциденты не найдены"
     else:
         load_incident(
             state,
-            queue.iloc[0]["ID"],
+            queue.iloc[0][QUEUE_ID],
         )
 
 
@@ -96,13 +95,13 @@ def on_row_selected(state, var_name, payload):
     index = payload.get("index")
 
     if index in state.queue_df.index:
-        entity_id = state.queue_df.loc[index, "ID"]
+        entity_id = state.queue_df.loc[index, QUEUE_ID]
         load_incident(state, entity_id)
 
 
 def on_reset(state):
     state.search = ""
-    state.severity = "Все"
+    state.severity = ALL
     update_queue(state)
 
 

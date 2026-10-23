@@ -1,4 +1,5 @@
 import pandas as pd
+from src.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE, Col
 from src.repository import IncidentRepository
 
 # Порядок критичности для сортировки очереди
@@ -16,14 +17,22 @@ SEVERITY_ORDER = {
     "informational": 4,
 }
 
+QUEUE_ID = "ID"
+QUEUE_CREATED = "Создан (UTC)"
+
+# Столбцы датасета, которые попадают в очередь как есть
+QUEUE_PASSTHROUGH_COLUMNS = [
+    Col.INCIDENT_TYPE,
+    Col.SEVERITY,
+    Col.VERDICT,
+    Col.ASSIGNEE,
+]
+
 # Названия и порядок столбцов таблицы очереди
 QUEUE_COLUMNS = [
-    "ID",
-    "Создан (UTC)",
-    "Тип инцидента",
-    "Критичность",
-    "Вердикт",
-    "Ответственный",
+    QUEUE_ID,
+    QUEUE_CREATED,
+    *QUEUE_PASSTHROUGH_COLUMNS,
 ]
 
 
@@ -36,6 +45,10 @@ def format_value(value) -> str:
 
     return str(value)
 
+
+def empty_card() -> pd.DataFrame:
+    return pd.DataFrame(columns=CARD_COLUMNS)
+
 class IncidentService:
     def __init__(self, repository: IncidentRepository):
         self.repository = repository
@@ -43,19 +56,19 @@ class IncidentService:
     def get_queue(
         self,
         search: str = "",
-        severity: str = "Все",
+        severity: str = ALL,
     ) -> pd.DataFrame:
         df = self.repository.get_all()
 
-        for column in QUEUE_COLUMNS[2:]:
+        for column in QUEUE_PASSTHROUGH_COLUMNS:
             if column not in df.columns:
                 df[column] = pd.NA
 
-        if "Создан" not in df.columns:
-            df["Создан"] = pd.NaT
+        if Col.CREATED not in df.columns:
+            df[Col.CREATED] = pd.NaT
 
         df["_priority"] = (
-            df["Критичность"]
+            df[Col.SEVERITY]
             .astype("string")
             .str.strip()
             .str.casefold()
@@ -64,22 +77,22 @@ class IncidentService:
         )
 
         df = df.sort_values(
-            ["_priority", "Создан"],
+            ["_priority", Col.CREATED],
             kind="stable",
             na_position="last",
         )
 
         result = pd.DataFrame(index=df.index)
 
-        result["ID"] = df["EntityId"]
-        result["Создан (UTC)"] = df["Создан"].map(format_value)
+        result[QUEUE_ID] = df[Col.ID]
+        result[QUEUE_CREATED] = df[Col.CREATED].map(format_value)
 
-        for column in QUEUE_COLUMNS[2:]:
+        for column in QUEUE_PASSTHROUGH_COLUMNS:
             result[column] = df[column].map(format_value)
 
-        if severity != "Все":
+        if severity != ALL:
             result = result[
-                result["Критичность"] == severity
+                result[Col.SEVERITY] == severity
             ]
 
         if search.strip():
@@ -98,12 +111,12 @@ class IncidentService:
 
     def get_severities(self) -> list[str]:
         values = (
-            self.get_queue()["Критичность"]
+            self.get_queue()[Col.SEVERITY]
             .drop_duplicates()
             .tolist()
         )
 
-        return ["Все", *values]
+        return [ALL, *values]
 
     def get_incident(self, entity_id: str) -> dict | None:
         return self.repository.get_by_id(entity_id)
@@ -112,19 +125,17 @@ class IncidentService:
         incident = self.get_incident(entity_id)
 
         if incident is None:
-            return pd.DataFrame(
-                columns=["Поле", "Значение"]
-            )
+            return empty_card()
 
         rows = [
             {
-                "Поле": key,
-                "Значение": format_value(value),
+                CARD_FIELD: key,
+                CARD_VALUE: format_value(value),
             }
             for key, value in incident.items()
         ]
 
         return pd.DataFrame(
             rows,
-            columns=["Поле", "Значение"],
+            columns=CARD_COLUMNS,
         )

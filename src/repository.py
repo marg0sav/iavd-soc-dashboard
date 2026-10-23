@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+from src.constants import Col, DATETIME_COLUMNS
 
 class IncidentRepository:
     def __init__(self, dataset_path: str | Path):
@@ -10,18 +11,18 @@ class IncidentRepository:
         df = pd.read_parquet(self.dataset_path)
         df.columns = df.columns.astype(str).str.strip()
 
-        if "EntityId" not in df.columns:
-            raise ValueError("В датасете отсутствует столбец EntityId")
+        if Col.ID not in df.columns:
+            raise ValueError(f"В датасете отсутствует столбец {Col.ID}")
 
-        df["EntityId"] = df["EntityId"].astype("string").str.strip()
+        df[Col.ID] = df[Col.ID].astype("string").str.strip()
 
-        if df["EntityId"].isna().any() or df["EntityId"].eq("").any():
-            raise ValueError("EntityId не должен быть пустым")
+        if df[Col.ID].isna().any() or df[Col.ID].eq("").any():
+            raise ValueError(f"{Col.ID} не должен быть пустым")
 
-        if df["EntityId"].duplicated().any():
-            raise ValueError("EntityId должен быть уникальным")
+        if df[Col.ID].duplicated().any():
+            raise ValueError(f"{Col.ID} должен быть уникальным")
 
-        for column in ("Создан", "Дата", "Дата закрытия (факт)"):
+        for column in DATETIME_COLUMNS:
             if column in df.columns:
                 df[column] = pd.to_datetime(
                     df[column],
@@ -38,7 +39,7 @@ class IncidentRepository:
 
     def get_by_id(self, entity_id: str) -> dict | None:
         rows = self._df[
-            self._df["EntityId"] == str(entity_id)
+            self._df[Col.ID] == str(entity_id)
         ]
 
         if rows.empty:
