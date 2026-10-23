@@ -332,3 +332,81 @@ def extract_visible_range(payload: dict):
         return None
 
     return start, end
+
+
+def calculate_summary_stats(
+    df: pd.DataFrame,
+    period: str = "24 часа",
+) -> dict:
+    data = _normalize_df(df)
+
+    result = {
+        "new": 0,
+        "critical": 0,
+        "no_verdict": 0,
+        "no_owner": 0,
+    }
+
+    if data.empty:
+        return result
+
+    start, end = _get_period_bounds(data, period)
+
+    data = data[
+        (data["Создан"] >= start)
+        & (data["Создан"] <= end)
+    ].copy()
+
+    if data.empty:
+        return result
+
+    result["new"] = len(data)
+
+    # Критические инциденты
+    result["critical"] = int(
+        (data["Уровень"] == "Критическая").sum()
+    )
+
+    # Инциденты без вердикта
+    if "Вердикт" in data.columns:
+        verdict = (
+            data["Вердикт"]
+            .astype("string")
+            .str.strip()
+            .str.casefold()
+        )
+
+        result["no_verdict"] = int(
+            (
+                verdict.isna()
+                | verdict.isin([
+                    "",
+                    "не указан",
+                    "не указано",
+                    "—",
+                ])
+            ).sum()
+        )
+
+    # Инциденты без ответственного
+    if "Ответственный" in data.columns:
+        owner = (
+            data["Ответственный"]
+            .astype("string")
+            .str.strip()
+            .str.casefold()
+        )
+
+        result["no_owner"] = int(
+            (
+                owner.isna()
+                | owner.isin([
+                    "",
+                    "не указан",
+                    "не назначен",
+                    "—",
+                ])
+            ).sum()
+        )
+
+    return result

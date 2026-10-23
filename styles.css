@@ -15,3 +15,51 @@ body {
     padding: 18px;
     margin-bottom: 20px;
 }
+
+/* ----------------------------------
+   Краткая статистика
+---------------------------------- */
+
+.summary-section {
+    margin-bottom: 24px;
+}
+
+.summary-period-toggle {
+    margin-bottom: 18px;
+}
+
+.summary-grid {
+    margin-bottom: 8px;
+}
+
+.summary-card {
+    background: #ffffff;
+    border: 1px solid #e9e4e0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    min-height: 140px;
+
+    box-shadow: 0 2px 6px rgba(40, 35, 32, 0.03);
+}
+
+.summary-value {
+    font-size: 34px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #332c28;
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+/* Выделяем только критические показатели */
+
+.critical-value {
+    color: #B54863;
+}
+
+/* Подпись под значением */
+
+.summary-note {
+    color: #8D8683;
+    font-size: 12px;
+}
