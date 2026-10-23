@@ -8,6 +8,7 @@ from src.analytics import (
     build_incident_chart as make_chart_figure,
     extract_visible_range,
     calculate_summary_stats,
+    calculate_summary_comparison,
 )
 from src.service import IncidentService
 
@@ -32,18 +33,27 @@ _service: IncidentService | None = None
 # Краткая статистика
 # --------------------------------------
 
+
 def update_summary(state, period):
     incidents = _service.repository.get_all()
 
-    result = calculate_summary_stats(
+    result = calculate_summary_comparison(
         incidents,
         period=period,
     )
 
-    state.summary_new = result["new"]
-    state.summary_critical = result["critical"]
-    state.summary_no_verdict = result["no_verdict"]
-    state.summary_no_owner = result["no_owner"]
+    current = result["current"]
+    changes = result["changes"]
+
+    state.summary_new = current["new"]
+    state.summary_critical = current["critical"]
+    state.summary_no_verdict = current["no_verdict"]
+    state.summary_no_owner = current["no_owner"]
+
+    state.summary_new_change = changes["new"]
+    state.summary_critical_change = changes["critical"]
+    state.summary_no_verdict_change = changes["no_verdict"]
+    state.summary_no_owner_change = changes["no_owner"]
 
 
 def on_summary_period_change(state, var_name, value):
@@ -145,28 +155,33 @@ def on_init(state):
 # Построение главной страницы
 # --------------------------------------
 
+
 def build_page():
     with tgb.Page() as page:
 
-        # 1. Краткая статистика
-        build_summary(
-            on_period_change=on_summary_period_change,
-        )
+        with tgb.part(class_name="dashboard-screen"):
 
-        # 2. Очередь
-        build_incident_queue(
-            on_filter_change=on_filter_change,
-            on_reset=on_reset,
-            on_row_selected=on_row_selected,
-        )
+            build_summary(
+                on_period_change=on_summary_period_change,
+            )
 
-        # 3. График
-        build_incident_chart(
-            on_period_change=on_stats_period_change,
-            on_range_change=on_stats_range_change,
-        )
+            
+            with tgb.layout(
+                columns="3 2",
+                class_name="dashboard-main-row",
+            ):
+                build_incident_queue(
+                    on_filter_change=on_filter_change,
+                    on_reset=on_reset,
+                    on_row_selected=on_row_selected,
+                )
 
-        # 4. Модальное окно
+                build_incident_chart(
+                    on_period_change=on_stats_period_change,
+                    on_range_change=on_stats_range_change,
+                )
+
+
         build_incident_card(
             on_close=on_card_close,
         )
@@ -175,14 +190,34 @@ def build_page():
 
 
 # Создаём GUI на уровне модуля, так Taipy использует контекст src.ui.main.
+# Создаём страницу
+page = build_page()
+
+# Стили непосредственно для страницы Taipy
+page.set_style({
+    ".summary-card": {
+        "height": "55px !important",
+        "min-height": "55px !important",
+        "max-height": "55px !important",
+        "padding": "4px 12px !important",
+        "margin": "0 !important",
+        "box-sizing": "border-box",
+        "overflow": "hidden",
+    },
+    ".summary-card > *": {
+        "margin": "0 !important",
+        "padding": "0 !important",
+    },
+})
 
 _gui = Gui(
-    page=build_page(),
+    page=page,
     css_file=str(
         Path(__file__).resolve().parents[2]
         / "styles.css"
     ),
 )
+
 
 _gui.on_init = on_init
 
@@ -197,6 +232,8 @@ def create_gui(service: IncidentService) -> Gui:
     global summary_new, summary_critical
     global summary_no_verdict, summary_no_owner
     global stats_figure
+    global summary_new_change, summary_critical_change
+    global summary_no_verdict_change, summary_no_owner_change
 
     _service = service
 
@@ -208,15 +245,25 @@ def create_gui(service: IncidentService) -> Gui:
     severity_options = service.get_severities()
 
     # Краткая статистика
-    summary = calculate_summary_stats(
+    
+    summary_result = calculate_summary_comparison(
         incidents,
         period=summary_period,
     )
+
+    summary = summary_result["current"]
+    changes = summary_result["changes"]
 
     summary_new = summary["new"]
     summary_critical = summary["critical"]
     summary_no_verdict = summary["no_verdict"]
     summary_no_owner = summary["no_owner"]
+
+    summary_new_change = changes["new"]
+    summary_critical_change = changes["critical"]
+    summary_no_verdict_change = changes["no_verdict"]
+    summary_no_owner_change = changes["no_owner"]
+
 
     # Динамика инцидентов
     stats_figure = make_chart_figure(

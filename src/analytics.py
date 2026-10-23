@@ -254,10 +254,17 @@ def build_incident_chart(
 
 
     fig.update_layout(
+        title=dict(
+        text="Динамика новых инцидентов",
+        x=0.3,
+        xanchor="left",
+        yanchor="top",
+        font=dict(size=16),
+        ),
         barmode="stack",
         bargap=0.18,
-        height=430,
-        margin=dict(l=40, r=20, t=20, b=90),
+        height=310,
+        margin=dict(l=35, r=15, t=25, b=60),
         hovermode="closest",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -410,3 +417,105 @@ def calculate_summary_stats(
         )
 
     return result
+
+
+def calculate_summary_comparison(
+    df: pd.DataFrame,
+    period: str = "24 часа",
+) -> dict:
+    # Текущие четыре показателя
+    current = calculate_summary_stats(df, period)
+
+    changes = {
+        key: "—"
+        for key in current
+    }
+
+    # Для всей истории предыдущего периода нет
+    if period == "Весь период":
+        return {
+            "current": current,
+            "changes": changes,
+        }
+
+    data = _normalize_df(df)
+
+    if data.empty:
+        return {
+            "current": current,
+            "changes": changes,
+        }
+
+    start, end = _get_period_bounds(data, period)
+
+    # Предыдущий интервал той же продолжительности
+    duration = end - start
+    previous_start = start - duration
+
+    previous_data = data[
+        (data["Создан"] >= previous_start)
+        & (data["Создан"] < start)
+    ].copy()
+
+    def count_metrics(frame):
+        if frame.empty:
+            return dict.fromkeys(current, 0)
+
+        def missing_count(column, missing_values):
+            if column not in frame.columns:
+                return 0
+
+            values = (
+                frame[column]
+                .astype("string")
+                .str.strip()
+                .str.casefold()
+            )
+
+            return int(
+                (
+                    values.isna()
+                    | values.isin(missing_values)
+                ).sum()
+            )
+
+        return {
+            "new": len(frame),
+            "critical": int(
+                (frame["Уровень"] == "Критическая").sum()
+            ),
+            "no_verdict": missing_count(
+                "Вердикт",
+                ["", "не указан", "не указано", "—"],
+            ),
+            "no_owner": missing_count(
+                "Ответственный",
+                ["", "не указан", "не назначен", "—"],
+            ),
+        }
+
+    previous = count_metrics(previous_data)
+
+    for key, value in current.items():
+        old_value = previous[key]
+
+        if old_value == 0:
+            # Не отображаем некорректные проценты
+            changes[key] = "—"
+            continue
+
+        difference = (value - old_value) / old_value * 100
+
+        if difference > 0:
+            arrow = "↑"
+        elif difference < 0:
+            arrow = "↓"
+        else:
+            arrow = "→"
+
+        changes[key] = f"{arrow} {abs(difference):.0f}%"
+
+    return {
+        "current": current,
+        "changes": changes,
+    }

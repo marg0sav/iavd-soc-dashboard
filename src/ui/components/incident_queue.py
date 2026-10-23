@@ -6,12 +6,7 @@ def build_incident_queue(
     on_reset,
     on_row_selected,
 ):
-    with tgb.part(class_name="panel"):
-
-        tgb.text(
-            "## Очередь инцидентов",
-            mode="md",
-        )
+    with tgb.part(class_name="panel queue-panel"):
 
         with tgb.layout(columns="2 1 1"):
 
@@ -40,6 +35,6 @@ def build_incident_queue(
             "{queue_df}",
             on_action=on_row_selected,
             editable=False,
-            page_size=10,
+            page_size=5,
             width="100%",
         )

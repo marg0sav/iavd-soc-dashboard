@@ -22,6 +22,12 @@ def initial_state():
         "summary_no_verdict": 0,
         "summary_no_owner": 0,
 
+        # Изменения относительно предыдущего периода
+        "summary_new_change": "—",
+        "summary_critical_change": "—",
+        "summary_no_verdict_change": "—",
+        "summary_no_owner_change": "—",
+
         # Очередь
         "queue_df": pd.DataFrame(columns=QUEUE_COLUMNS),
         "queue_count": 0,

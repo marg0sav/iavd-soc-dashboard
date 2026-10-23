@@ -5,11 +5,7 @@ def build_incident_chart(
     on_period_change,
     on_range_change,
 ):
-    with tgb.part(class_name="panel"):
-        tgb.text(
-            "## Динамика новых инцидентов",
-            mode="md",
-        )
+    with tgb.part(class_name="panel chart-panel"):
 
         tgb.toggle(
             "{stats_period}",
