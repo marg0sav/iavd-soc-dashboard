@@ -282,19 +282,26 @@ def build_incident_chart(
             tickformat="d",
             dtick=1 if grouped[list(COLORS)].sum(axis=1).max() <= 10 else None,
             nticks=8,
+            fixedrange=True,
         ),
         dragmode="zoom",
         showlegend=True,
-        uirevision="incident-stats",
     )
 
     if visible_range is not None:
-        fig.update_xaxes(
-            range=[
-                visible_range[0].tz_localize(None),
-                visible_range[1].tz_localize(None),
-            ]
-        )
+        display_start, display_end = visible_range
+    else:
+        display_start, display_end = base_start, base_end
+
+    fig.update_xaxes(
+        type="date",
+        range=[
+            display_start.tz_localize(None),
+            display_end.tz_localize(None),
+        ],
+        autorange=False,
+    )
+
 
     return fig
 
