@@ -1,21 +1,19 @@
 import pandas as pd
 import plotly.graph_objects as go
 from src.constants import Col
+from src.severity import Severity, parse_severity
 
-SEVERITIES = {
-    "Низкая": ["низкая", "low"],
-    "Средняя": ["средняя", "medium"],
-    "Высокая": ["высокая", "high"],
-    "Критическая": ["критическая", "critical"],
-}
+# Уровень для пустой или нераспознанной критичности
+UNSPECIFIED = "Не указана"
 
-
+# Порядок задаёт порядок слоёв в столбце и в легенде
 COLORS = {
-    "Не указана": "#F2EFED",
-    "Низкая": "#DDD8D5",
-    "Средняя": "#8D8683",
-    "Высокая": "#B8B1AE",
-    "Критическая": "#B54863",
+    UNSPECIFIED: "#F2EFED",
+    Severity.INFORMATIONAL.label: "#E8E4E1",
+    Severity.LOW.label: "#DDD8D5",
+    Severity.MEDIUM.label: "#8D8683",
+    Severity.HIGH.label: "#B8B1AE",
+    Severity.CRITICAL.label: "#B54863",
 }
 
 
@@ -27,11 +25,11 @@ def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
     data[Col.CREATED] = pd.to_datetime(data[Col.CREATED], utc=True, errors="coerce")
     data = data.dropna(subset=[Col.CREATED]).copy()
 
-    severity = data[Col.SEVERITY].astype("string").str.strip().str.casefold()
-    data["Уровень"] = "Не указана"
-
-    for level, aliases in SEVERITIES.items():
-        data.loc[severity.isin(aliases), "Уровень"] = level
+    data["Уровень"] = (
+        parse_severity(data[Col.SEVERITY])
+        .map(lambda s: s.label, na_action="ignore")
+        .fillna(UNSPECIFIED)
+    )
 
     return data
 

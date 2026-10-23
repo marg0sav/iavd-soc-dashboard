@@ -1,21 +1,7 @@
 import pandas as pd
 from src.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE, Col
 from src.repository import IncidentRepository
-
-# Порядок критичности для сортировки очереди
-# чем меньше число, тем раньше инцидент отображается
-SEVERITY_ORDER = {
-    "критическая": 0,
-    "critical": 0,
-    "высокая": 1,
-    "high": 1,
-    "средняя": 2,
-    "medium": 2,
-    "низкая": 3,
-    "low": 3,
-    "информационная": 4,
-    "informational": 4,
-}
+from src.severity import parse_severity
 
 QUEUE_ID = "ID"
 QUEUE_CREATED = "Создан (UTC)"
@@ -68,11 +54,8 @@ class IncidentService:
             df[Col.CREATED] = pd.NaT
 
         df["_priority"] = (
-            df[Col.SEVERITY]
-            .astype("string")
-            .str.strip()
-            .str.casefold()
-            .map(SEVERITY_ORDER)
+            parse_severity(df[Col.SEVERITY])
+            .map(lambda s: s.priority, na_action="ignore")
             .fillna(99)
         )
 
