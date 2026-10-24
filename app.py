@@ -3,6 +3,14 @@ from pathlib import Path
 from taipy.gui import Gui
 
 from src.pages.dashboard import dashboard
+from src.pages.root import root_page
+
+# "/" — root-страница с header'ом; на root-странице Taipy показывает первую страницу 
+# после неё (dashboard_page).
+pages = {
+    "/": root_page,
+    "dashboard": dashboard.dashboard_page,
+}
 
 
 def on_init(state):
@@ -12,7 +20,7 @@ def on_init(state):
 
 def main():
     gui = Gui(
-        page=dashboard.dashboard_page,
+        pages=pages,
         css_file=str(Path(__file__).resolve().parent / "styles.css"),
     )
     
