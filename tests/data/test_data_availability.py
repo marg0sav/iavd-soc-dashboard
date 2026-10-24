@@ -1,15 +1,10 @@
-from pathlib import Path
-
 from src.constants import Col
+from src.data.data import PATH_TO_DATA
 from src.repository import IncidentRepository
-
-DATASET_PATH = (
-    Path(__file__).resolve().parents[2] / "data" / "iavd_1000_incidents_raw_target.parquet"
-)
 
 
 def test_setup_data():
-    incidents = IncidentRepository(DATASET_PATH).get_all()
+    incidents = IncidentRepository(PATH_TO_DATA).get_all()
 
     # Если None нас это не устраивает.
     assert incidents is not None
