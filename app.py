@@ -1,19 +1,22 @@
 from pathlib import Path
-from src.repository import IncidentRepository
-from src.service import IncidentService
-from src.ui import create_gui
+
+from taipy.gui import Gui
+
+from src.pages.dashboard import dashboard
+
+
+def on_init(state):
+    # Глобальный on_init: делегирует инициализацию сессии страницам.
+    dashboard.on_init(state)
 
 
 def main():
-    project_dir = Path(__file__).resolve().parent
-
-    repository = IncidentRepository(
-        project_dir / "data" / "iavd_1000_incidents_raw_target.parquet"
+    gui = Gui(
+        page=dashboard.dashboard_page,
+        css_file=str(Path(__file__).resolve().parent / "styles.css"),
     )
-
-    service = IncidentService(repository)
-
-    gui = create_gui(service)
+    
+    gui.on_init = on_init
 
     gui.run(
         title="SOC Dashboard",
