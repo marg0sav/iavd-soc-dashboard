@@ -14,3 +14,4 @@ dependencies = [
 
 [tool.poetry]
 package-mode = false
+requires-poetry = ">=2.5,<3.0"
