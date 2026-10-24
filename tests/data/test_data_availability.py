@@ -1,6 +1,6 @@
-from src.constants import Col
-from src.data.data import PATH_TO_DATA
-from src.repository import IncidentRepository
+from soc_dashboard.constants import Col
+from soc_dashboard.data.data import PATH_TO_DATA
+from soc_dashboard.repository import IncidentRepository
 
 
 def test_setup_data():

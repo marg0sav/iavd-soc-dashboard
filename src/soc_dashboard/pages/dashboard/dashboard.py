@@ -1,10 +1,10 @@
 import pandas as pd
 import taipy.gui.builder as tgb
 
-from src.constants import ALL
-from src.data.data import get_incident_service
-from src.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
-from src.analytics import build_incident_chart, extract_visible_range
+from soc_dashboard.constants import ALL
+from soc_dashboard.data.data import get_incident_service
+from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
+from soc_dashboard.analytics import build_incident_chart, extract_visible_range
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)

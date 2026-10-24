@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from src.constants import Col, DATETIME_COLUMNS
+from soc_dashboard.constants import Col, DATETIME_COLUMNS
 
 class IncidentRepository:
     def __init__(self, dataset_path: str | Path):

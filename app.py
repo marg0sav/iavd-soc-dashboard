@@ -2,8 +2,8 @@ from pathlib import Path
 
 from taipy.gui import Gui
 
-from src.pages.dashboard import dashboard
-from src.pages.root import root_page
+from soc_dashboard.pages.dashboard import dashboard
+from soc_dashboard.pages.root import root_page
 
 # "/" — root-страница с header'ом; на root-странице Taipy показывает первую страницу 
 # после неё (dashboard_page).
