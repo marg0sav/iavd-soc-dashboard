@@ -5,7 +5,7 @@ from taipy.gui import Gui
 
 from src.constants import ALL
 from src.service import IncidentService, QUEUE_COLUMNS, QUEUE_ID, empty_card
-from src.analytics import build_incident_chart, extract_visible_range
+from src.analytics import build_incident_chart, extract_visible_range, calculate_summary_comparison
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
@@ -18,9 +18,11 @@ severity_options = [ALL]
 selected_title = "Выберите инцидент"
 queue_count = 0
 
-stats_period = "30 дней"
+# -----------------------------------------
+# Временные периоды
+# -----------------------------------------
 
-stats_period_options = [
+PERIOD_OPTIONS = [
     "24 часа",
     "7 дней",
     "30 дней",
@@ -28,10 +30,52 @@ stats_period_options = [
     "Весь период",
 ]
 
+stats_period = "30 дней"
+summary_period = "24 часа"
+
 stats_figure = None
 stats_zoom_range = None
 
+# -----------------------------------------
+# Краткая статистика
+# -----------------------------------------
+
+summary_new = 0
+summary_critical = 0
+summary_no_verdict = 0
+summary_no_owner = 0
+
+summary_new_change = "—"
+summary_critical_change = "—"
+summary_no_verdict_change = "—"
+summary_no_owner_change = "—"
+
 _service: IncidentService | None = None
+
+def update_summary(state, period):
+    incidents = _service.repository.get_all()
+
+    result = calculate_summary_comparison(
+        incidents,
+        period=period,
+    )
+
+    current = result["current"]
+    changes = result["changes"]
+
+    state.summary_new = current["new"]
+    state.summary_critical = current["critical"]
+    state.summary_no_verdict = current["no_verdict"]
+    state.summary_no_owner = current["no_owner"]
+
+    state.summary_new_change = changes["new"]
+    state.summary_critical_change = changes["critical"]
+    state.summary_no_verdict_change = changes["no_verdict"]
+    state.summary_no_owner_change = changes["no_owner"]
+
+
+def on_summary_period_change(state, var_name, value):
+    update_summary(state, value)
 
 def on_stats_period_change(state, var_name, value):
     incidents = _service.repository.get_all()
@@ -85,6 +129,7 @@ def update_queue(state):
 
 def on_init(state):
     update_queue(state)
+    update_summary(state, state.summary_period)
 
 
 def on_filter_change(state, var_name, value):
@@ -107,17 +152,13 @@ def on_reset(state):
 
 def build_page():
     with tgb.Page() as page:
-        tgb.text(
-            "# Очередь инцидентов SOC",
-            mode="md",)
-
         
         with tgb.part(class_name="panel"):
             tgb.text("## Динамика новых инцидентов", mode="md")
 
             tgb.toggle(
                 "{stats_period}",
-                lov="{stats_period_options}",
+                lov=PERIOD_OPTIONS,
                 on_change=on_stats_period_change,
                 class_name="stats-period-toggle",
             )
@@ -128,6 +169,60 @@ def build_page():
                 id="incident-stats-chart",
                 on_range_change=on_stats_range_change,
             )
+
+        with tgb.part(class_name="summary-section"):
+
+            tgb.toggle(
+                "{summary_period}",
+                lov=PERIOD_OPTIONS,
+                on_change=on_summary_period_change,
+                class_name="summary-period-toggle",
+            )
+
+            with tgb.layout(
+                columns="1 1 1 1",
+                class_name="summary-grid",
+            ):
+
+                with tgb.part(class_name="summary-card"):
+                    tgb.text(
+                        "Новые инциденты",
+                        class_name="summary-label",
+                    )
+                    tgb.text(
+                        "{summary_new}  {summary_new_change}",
+                        class_name="summary-metric-line",
+                    )
+
+                with tgb.part(class_name="summary-card"):
+                    tgb.text(
+                        "Критические инциденты",
+                        class_name="summary-label",
+                    )
+                    tgb.text(
+                        "{summary_critical}  {summary_critical_change}",
+                        class_name="summary-metric-line critical-metric",
+                    )
+
+                with tgb.part(class_name="summary-card"):
+                    tgb.text(
+                        "Без вердикта",
+                        class_name="summary-label",
+                    )
+                    tgb.text(
+                        "{summary_no_verdict}  {summary_no_verdict_change}",
+                        class_name="summary-metric-line",
+                    )
+
+                with tgb.part(class_name="summary-card"):
+                    tgb.text(
+                        "Без ответственного",
+                        class_name="summary-label",
+                    )
+                    tgb.text(
+                        "{summary_no_owner}  {summary_no_owner_change}",
+                        class_name="summary-metric-line",
+                    )
 
         with tgb.part(class_name="panel"):
             tgb.input(
@@ -181,12 +276,40 @@ def create_gui(service: IncidentService) -> Gui:
     global _service, queue_df, severity_options
     global queue_count, stats_figure
 
-    _service = service
+    global summary_new, summary_critical
+    global summary_no_verdict, summary_no_owner
 
+    global summary_new_change, summary_critical_change
+    global summary_no_verdict_change, summary_no_owner_change
+
+    _service = service
+    incidents = service.repository.get_all()
+
+    # Очередь инцидентов
     queue_df = service.get_queue()
     queue_count = len(queue_df)
     severity_options = service.get_severities()
 
+    # Краткая статистика
+    result = calculate_summary_comparison(
+        incidents,
+        period=summary_period,
+    )
+
+    current = result["current"]
+    changes = result["changes"]
+
+    summary_new = current["new"]
+    summary_critical = current["critical"]
+    summary_no_verdict = current["no_verdict"]
+    summary_no_owner = current["no_owner"]
+
+    summary_new_change = changes["new"]
+    summary_critical_change = changes["critical"]
+    summary_no_verdict_change = changes["no_verdict"]
+    summary_no_owner_change = changes["no_owner"]
+
+    # Динамика инцидентов
     stats_figure = build_incident_chart(
         service.repository.get_all(),
         period=stats_period,
