@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
-from soc_dashboard.constants import Col
+from soc_dashboard.constants import NO_DATA, Col, Period
 from soc_dashboard.severity import Severity, parse_severity
 
 # Уровень для пустой или нераспознанной критичности
@@ -393,7 +393,7 @@ def _count_summary_metrics(data: pd.DataFrame) -> dict:
 
 def calculate_summary_comparison(
     df: pd.DataFrame,
-    period: str = "24 часа",
+    period: str = Period.DAY,
     date_from=None,
     date_to=None,
 ) -> dict:
@@ -401,7 +401,7 @@ def calculate_summary_comparison(
     data = _normalize_df(df)
 
     empty = _count_summary_metrics(data.iloc[0:0])
-    changes = {key: "—" for key in empty}
+    changes = {key: NO_DATA for key in empty}
 
     if data.empty:
         return {
@@ -429,7 +429,7 @@ def calculate_summary_comparison(
 
     current = _count_summary_metrics(current_data)
 
-    if period == "Весь период" and not custom_range:
+    if period == Period.ALL_TIME and not custom_range:
         return {
             "current": current,
             "changes": changes,
@@ -451,7 +451,7 @@ def calculate_summary_comparison(
         old_value = previous[key]
 
         if old_value == 0:
-            changes[key] = "—"
+            changes[key] = NO_DATA
             continue
 
         difference = (value - old_value) / old_value * 100

@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import taipy.gui.builder as tgb
 
-from soc_dashboard.constants import ALL
+from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Period
 from soc_dashboard.data.data import get_incident_service
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 from soc_dashboard.analytics import build_incident_chart, extract_visible_range, calculate_summary_comparison
@@ -23,18 +23,10 @@ queue_count = 0
 # Временные периоды
 # -----------------------------------------
 
-PERIOD_OPTIONS = [
-    "24 часа",
-    "7 дней",
-    "30 дней",
-    "Год",
-    "Весь период",
-]
-
 stats_period = "30 дней"
-summary_period = "24 часа"
+summary_period = Period.DAY
 
-summary_period_options = PERIOD_OPTIONS + ["Свой период"]
+summary_period_options = PERIOD_OPTIONS + [Period.CUSTOM]
 
 summary_date_from = ""
 summary_date_to = ""
@@ -53,10 +45,10 @@ summary_critical = 0
 summary_no_verdict = 0
 summary_no_owner = 0
 
-summary_new_change = "—"
-summary_critical_change = "—"
-summary_no_verdict_change = "—"
-summary_no_owner_change = "—"
+summary_new_change = NO_DATA
+summary_critical_change = NO_DATA
+summary_no_verdict_change = NO_DATA
+summary_no_owner_change = NO_DATA
 
 
 def format_date_input(value):
@@ -102,7 +94,7 @@ def on_apply_summary_range(state):
 
         result = calculate_summary_comparison(
             incidents,
-            period="Свой период",
+            period=Period.CUSTOM,
             date_from=date_from,
             date_to=date_to,
         )
@@ -120,7 +112,7 @@ def on_apply_summary_range(state):
         state.summary_no_verdict_change = changes["no_verdict"]
         state.summary_no_owner_change = changes["no_owner"]
 
-        state.summary_period = "Свой период"
+        state.summary_period = Period.CUSTOM
         state.summary_date_error = ""
 
     except ValueError as exc:
@@ -149,7 +141,7 @@ def update_summary(state, period):
 
 
 def on_summary_period_change(state, var_name, value):
-    if value == "Свой период":
+    if value == Period.CUSTOM:
         on_apply_summary_range(state)
         return
 
