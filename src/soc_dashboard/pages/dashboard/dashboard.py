@@ -1,11 +1,13 @@
+from datetime import datetime, time, timedelta
+
 import pandas as pd
 import taipy.gui.builder as tgb
 
-from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Period
+from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Col, Period
 from soc_dashboard.data.data import get_incident_service
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 from soc_dashboard.analytics import build_incident_chart, extract_visible_range, calculate_summary_comparison
-from soc_dashboard.pages.dashboard.utils import format_date_input, parse_date_input
+from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
@@ -27,8 +29,8 @@ summary_period = Period.DAY
 
 summary_period_options = PERIOD_OPTIONS + [Period.CUSTOM]
 
-summary_date_from = ""
-summary_date_to = ""
+# Границы своего периода [начало, конец], задаются в on_init
+summary_dates = [None, None]
 
 summary_date_error = ""
 
@@ -50,23 +52,32 @@ summary_no_verdict_change = NO_DATA
 summary_no_owner_change = NO_DATA
 
 
+def default_summary_dates():
+    """Последние 30 дней датасета."""
+    latest = get_incident_service().repository.get_all()[Col.CREATED].max().date()
+
+    # Полночь без часового пояса: браузер покажет тот же день в любом поясе
+    return [
+        datetime.combine(latest - timedelta(days=29), time()),
+        datetime.combine(latest, time()),
+    ]
+
+
 def on_apply_summary_range(state):
-    try:
-        date_from = parse_date_input(state.summary_date_from)
-        date_to = parse_date_input(state.summary_date_to)
+    date_from, date_to = (tgb_date_range_to_date(value) for value in state.summary_dates)
 
-        if date_from > date_to:
-            raise ValueError(
-                "Дата начала не может быть позже даты окончания"
-            )
+    if date_from is None or date_to is None:
+        state.summary_date_error = "Выберите дату начала и окончания"
+        return
 
-        update_summary(state, Period.CUSTOM, date_from, date_to)
+    if date_from > date_to:
+        state.summary_date_error = "Дата начала не может быть позже даты окончания"
+        return
 
-        state.summary_period = Period.CUSTOM
-        state.summary_date_error = ""
+    update_summary(state, Period.CUSTOM, date_from, date_to)
 
-    except ValueError as exc:
-        state.summary_date_error = str(exc)
+    state.summary_period = Period.CUSTOM
+    state.summary_date_error = ""
 
 def update_summary(state, period, date_from, date_to):
     incidents = get_incident_service().repository.get_all()
@@ -99,14 +110,6 @@ def on_summary_period_change(state, var_name, value):
 
     state.summary_date_error = ""
     update_summary(state, value, None, None)
-
-def on_summary_date_change(state, var_name, value):
-    try:
-        formatted = format_date_input(value)
-        setattr(state, var_name, formatted)
-        state.summary_date_error = ""
-    except ValueError as exc:
-        state.summary_date_error = str(exc)
 
 def on_stats_period_change(state, var_name, value):
     incidents = get_incident_service().repository.get_all()
@@ -167,6 +170,8 @@ def on_init(state):
     )
 
     update_queue(state)
+
+    state.summary_dates = default_summary_dates()
     update_summary(state, state.summary_period, None, None)
 
 
@@ -210,7 +215,7 @@ with tgb.Page() as dashboard_page:
     with tgb.part(class_name="summary-section"):
 
         with tgb.layout(
-            columns="auto 140px 140px auto",
+            columns="auto auto auto",
             class_name="summary-controls",
         ):
             tgb.toggle(
@@ -220,19 +225,11 @@ with tgb.Page() as dashboard_page:
                 class_name="summary-period-toggle",
             )
 
-            tgb.input(
-                "{summary_date_from}",
-                label="С",
-                on_change=on_summary_date_change,
-                change_delay=500,
-                class_name="summary-date-input",
-            )
-
-            tgb.input(
-                "{summary_date_to}",
-                label="По",
-                on_change=on_summary_date_change,
-                change_delay=500,
+            tgb.date_range(
+                "{summary_dates}",
+                label_start="С",
+                label_end="По",
+                format="dd.MM.yyyy",
                 class_name="summary-date-input",
             )
 

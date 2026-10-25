@@ -1,31 +1,13 @@
-import re
-from datetime import datetime
-
-def format_date_input(value):
-    text = str(value or "").strip()
-
-    # Разрешаем только цифры и точки
-    if not re.fullmatch(r"[0-9.]*", text):
-        raise ValueError("Разрешены только цифры и точки")
-
-    digits = text.replace(".", "")[:8]
-
-    parts = [
-        digits[:2],
-        digits[2:4],
-        digits[4:8],
-    ]
-
-    return ".".join(part for part in parts if part)
+from datetime import date, datetime
 
 
-def parse_date_input(value):
-    if not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", value):
-        raise ValueError(
-            "Введите дату полностью: ДД.ММ.ГГГГ"
-        )
+def tgb_date_range_to_date(value) -> date | None:
+    """Приводит значение из tgb.date_range к date, None - если даты нет."""
+    # Браузер присылает date, а стартовое значение задаётся как datetime
+    if isinstance(value, datetime):
+        return value.date()
 
-    try:
-        return datetime.strptime(value, "%d.%m.%Y").date()
-    except ValueError:
-        raise ValueError("Указана несуществующая дата")
+    if isinstance(value, date):
+        return value
+
+    return None
