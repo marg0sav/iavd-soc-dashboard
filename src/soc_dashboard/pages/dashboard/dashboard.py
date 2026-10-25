@@ -60,27 +60,7 @@ def on_apply_summary_range(state):
                 "Дата начала не может быть позже даты окончания"
             )
 
-        incidents = get_incident_service().repository.get_all()
-
-        result = calculate_summary_comparison(
-            incidents,
-            period=Period.CUSTOM,
-            date_from=date_from,
-            date_to=date_to,
-        )
-
-        current = result["current"]
-        changes = result["changes"]
-
-        state.summary_new = current["new"]
-        state.summary_critical = current["critical"]
-        state.summary_no_verdict = current["no_verdict"]
-        state.summary_no_owner = current["no_owner"]
-
-        state.summary_new_change = changes["new"]
-        state.summary_critical_change = changes["critical"]
-        state.summary_no_verdict_change = changes["no_verdict"]
-        state.summary_no_owner_change = changes["no_owner"]
+        update_summary(state, Period.CUSTOM, date_from, date_to)
 
         state.summary_period = Period.CUSTOM
         state.summary_date_error = ""
@@ -88,12 +68,14 @@ def on_apply_summary_range(state):
     except ValueError as exc:
         state.summary_date_error = str(exc)
 
-def update_summary(state, period):
+def update_summary(state, period, date_from, date_to):
     incidents = get_incident_service().repository.get_all()
 
     result = calculate_summary_comparison(
         incidents,
         period=period,
+        date_from=date_from,
+        date_to=date_to,
     )
 
     current = result["current"]
@@ -116,7 +98,7 @@ def on_summary_period_change(state, var_name, value):
         return
 
     state.summary_date_error = ""
-    update_summary(state, value)
+    update_summary(state, value, None, None)
 
 def on_summary_date_change(state, var_name, value):
     try:
@@ -185,7 +167,7 @@ def on_init(state):
     )
 
     update_queue(state)
-    update_summary(state, state.summary_period)
+    update_summary(state, state.summary_period, None, None)
 
 
 def on_filter_change(state, var_name, value):
