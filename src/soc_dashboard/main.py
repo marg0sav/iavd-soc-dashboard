@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from taipy.gui import Gui
 
 from soc_dashboard.pages.dashboard import dashboard
