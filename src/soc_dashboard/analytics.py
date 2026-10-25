@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
-from soc_dashboard.constants import Col
+from soc_dashboard.constants import NO_DATA, Col, Period
 from soc_dashboard.severity import Severity, parse_severity
 
 # Уровень для пустой или нераспознанной критичности
@@ -331,3 +331,143 @@ def extract_visible_range(payload: dict):
         return None
 
     return start, end
+
+# -----------------------------------------
+# Краткая статистика
+# -----------------------------------------
+
+SUMMARY_MISSING_VALUES = {
+    "",
+    "не указан",
+}
+
+def _count_missing(df: pd.DataFrame, column: str) -> int:
+    if column not in df.columns:
+        return 0
+
+    values = (
+        df[column]
+        .astype("string")
+        .str.strip()
+        .str.casefold()
+    )
+
+    return int(
+        (
+            values.isna()
+            | values.isin(SUMMARY_MISSING_VALUES)
+        ).sum()
+    )
+
+
+def _count_summary_metrics(data: pd.DataFrame) -> dict:
+    if data.empty:
+        return {
+            "new": 0,
+            "critical": 0,
+            "no_verdict": 0,
+            "no_owner": 0,
+        }
+
+    return {
+        "new": len(data),
+
+        "critical": int(
+            (
+                data["Уровень"]
+                == Severity.CRITICAL.label
+            ).sum()
+        ),
+
+        "no_verdict": _count_missing(
+            data,
+            Col.VERDICT,
+        ),
+
+        "no_owner": _count_missing(
+            data,
+            Col.ASSIGNEE,
+        ),
+    }
+
+
+def calculate_summary_comparison(
+    df: pd.DataFrame,
+    period: str = Period.DAY,
+    date_from=None,
+    date_to=None,
+) -> dict:
+
+    data = _normalize_df(df)
+
+    empty = _count_summary_metrics(data.iloc[0:0])
+    changes = {key: NO_DATA for key in empty}
+
+    if data.empty:
+        return {
+            "current": empty,
+            "changes": changes,
+        }
+
+    custom_range = date_from is not None and date_to is not None
+
+    if custom_range:
+        start = pd.Timestamp(date_from).tz_localize("UTC")
+        end = pd.Timestamp(date_to).tz_localize("UTC") + pd.Timedelta(days=1)
+    else:
+        start, end = _get_period_bounds(data, period)
+
+    # Текущий период
+    current_data = data[
+        (data[Col.CREATED] >= start)
+        & (
+            (data[Col.CREATED] < end)
+            if custom_range
+            else (data[Col.CREATED] <= end)
+        )
+    ]
+
+    current = _count_summary_metrics(current_data)
+
+    if period == Period.ALL_TIME and not custom_range:
+        return {
+            "current": current,
+            "changes": changes,
+        }
+
+    # Предыдущий период той же продолжительности
+    duration = end - start
+    previous_start = start - duration
+
+    previous_data = data[
+        (data[Col.CREATED] >= previous_start)
+        & (data[Col.CREATED] < start)
+    ]
+
+    previous = _count_summary_metrics(previous_data)
+
+    # Процентные изменения
+    for key, value in current.items():
+        old_value = previous[key]
+
+        if old_value == 0:
+            changes[key] = NO_DATA
+            continue
+
+        difference = (value - old_value) / old_value * 100
+
+        if difference > 0:
+            arrow = "↑"
+        elif difference < 0:
+            arrow = "↓"
+        else:
+            arrow = "→"
+
+        changes[key] = (
+            f"{arrow} {abs(difference):.0f}%"
+        )
+
+    return {
+        "current": current,
+        "changes": changes,
+    }
