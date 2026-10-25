@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from soc_dashboard.pages.dashboard.dashboard import format_date_input, parse_date_input
+from soc_dashboard.pages.dashboard.utils import format_date_input, parse_date_input
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,3 @@
-import re
-from datetime import datetime
 import pandas as pd
 import taipy.gui.builder as tgb
 
@@ -7,6 +5,7 @@ from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Period
 from soc_dashboard.data.data import get_incident_service
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 from soc_dashboard.analytics import build_incident_chart, extract_visible_range, calculate_summary_comparison
+from soc_dashboard.pages.dashboard.utils import format_date_input, parse_date_input
 
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
@@ -50,35 +49,6 @@ summary_critical_change = NO_DATA
 summary_no_verdict_change = NO_DATA
 summary_no_owner_change = NO_DATA
 
-
-def format_date_input(value):
-    text = str(value or "").strip()
-
-    # Разрешаем только цифры и точки
-    if not re.fullmatch(r"[0-9.]*", text):
-        raise ValueError("Разрешены только цифры и точки")
-
-    digits = text.replace(".", "")[:8]
-
-    parts = [
-        digits[:2],
-        digits[2:4],
-        digits[4:8],
-    ]
-
-    return ".".join(part for part in parts if part)
-
-
-def parse_date_input(value):
-    if not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", value):
-        raise ValueError(
-            "Введите дату полностью: ДД.ММ.ГГГГ"
-        )
-
-    try:
-        return datetime.strptime(value, "%d.%m.%Y").date()
-    except ValueError:
-        raise ValueError("Указана несуществующая дата")
 
 def on_apply_summary_range(state):
     try:
