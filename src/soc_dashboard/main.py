@@ -3,8 +3,8 @@ from taipy.gui import Gui
 from soc_dashboard.pages.dashboard import dashboard
 from soc_dashboard.pages.root import root_page
 
-# "/" — root-страница с header'ом; на root-странице Taipy показывает первую страницу 
-# после неё (dashboard_page).
+# После "/" (root_page) Taipy показывает страницу после нее [1]
+# [1] https://github.com/Avaiga/taipy/blob/5bcb5749521f9ddcc725c009aca00a88ff724e87/frontend/taipy-gui/src/components/Router.tsx#L274-L278
 pages = {
     "/": root_page,
     "dashboard": dashboard.dashboard_page,
