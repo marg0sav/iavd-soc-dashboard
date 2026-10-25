@@ -45,11 +45,11 @@ CASES = [
         date_to="2024-01-11",
         current={"new": 3, "critical": 1, "no_verdict": 2, "no_owner": 2},
         changes={
-                "new": NO_DATA,
-                "critical": NO_DATA,
-                "no_verdict": NO_DATA,
-                "no_owner": NO_DATA,
-            },
+            "new": NO_DATA,
+            "critical": NO_DATA,
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
     Case(
         id="custom_range_includes_whole_last_day",
@@ -62,11 +62,11 @@ CASES = [
         date_to="2024-01-11",
         current={"new": 1, "critical": 0, "no_verdict": 0, "no_owner": 0},
         changes={
-                "new": NO_DATA,
-                "critical": NO_DATA,
-                "no_verdict": NO_DATA,
-                "no_owner": NO_DATA,
-            },
+            "new": NO_DATA,
+            "critical": NO_DATA,
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
     Case(
         id="changes_vs_previous_period_of_same_length",
@@ -86,7 +86,12 @@ CASES = [
         current={"new": 2, "critical": 1, "no_verdict": 1, "no_owner": 0},
         # Без вердикта и без ответственного в предыдущем периоде 0:
         # процент не определён.
-        changes={"new": "↓ 50%", "critical": "→ 0%", "no_verdict": NO_DATA, "no_owner": NO_DATA},
+        changes={
+            "new": "↓ 50%",
+            "critical": "→ 0%",
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
     Case(
         id="period_counts_back_from_latest_incident",
@@ -101,7 +106,12 @@ CASES = [
         date_from=None,
         date_to=None,
         current={"new": 2, "critical": 0, "no_verdict": 0, "no_owner": 0},
-        changes={"new": "↑ 100%", "critical": NO_DATA, "no_verdict": NO_DATA, "no_owner": NO_DATA},
+        changes={
+            "new": "↑ 100%",
+            "critical": NO_DATA,
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
     Case(
         id="all_time_has_no_changes",
@@ -114,11 +124,11 @@ CASES = [
         period=Period.ALL_TIME,
         current={"new": 2, "critical": 0, "no_verdict": 0, "no_owner": 0},
         changes={
-                "new": NO_DATA,
-                "critical": NO_DATA,
-                "no_verdict": NO_DATA,
-                "no_owner": NO_DATA,
-            },
+            "new": NO_DATA,
+            "critical": NO_DATA,
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
     Case(
         id="empty_incidents",
@@ -128,11 +138,11 @@ CASES = [
         date_to=None,
         current={"new": 0, "critical": 0, "no_verdict": 0, "no_owner": 0},
         changes={
-                "new": NO_DATA,
-                "critical": NO_DATA,
-                "no_verdict": NO_DATA,
-                "no_owner": NO_DATA,
-            },
+            "new": NO_DATA,
+            "critical": NO_DATA,
+            "no_verdict": NO_DATA,
+            "no_owner": NO_DATA,
+        },
     ),
 ]
 

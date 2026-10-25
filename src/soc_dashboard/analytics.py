@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+
 from soc_dashboard.constants import NO_DATA, Col, Period
 from soc_dashboard.severity import Severity, parse_severity
 
@@ -51,7 +52,6 @@ def _get_period_bounds(df: pd.DataFrame, period: str):
     return start, end
 
 
-
 def _choose_frequency(start, end, period=None):
     hours = (end - start).total_seconds() / 3600
     days = hours / 24
@@ -74,12 +74,8 @@ def _choose_frequency(start, end, period=None):
     return "MS"
 
 
-
 def _prepare_grouped(df, start, end, freq):
-    data = df[
-        (df[Col.CREATED] >= start)
-        & (df[Col.CREATED] < end)
-    ].copy()
+    data = df[(df[Col.CREATED] >= start) & (df[Col.CREATED] < end)].copy()
 
     start_naive = start.tz_localize(None)
     end_naive = end.tz_localize(None)
@@ -112,9 +108,7 @@ def _prepare_grouped(df, start, end, freq):
         freq="7D" if freq == "W-MON" else freq,
     )
 
-    data["Время"] = floor_time(
-        data[Col.CREATED].dt.tz_localize(None)
-    )
+    data["Время"] = floor_time(data[Col.CREATED].dt.tz_localize(None))
 
     grouped = (
         data.groupby(["Время", "Уровень"])
@@ -150,15 +144,9 @@ def _format_interval(start, end, freq):
 
     if freq in ("D", "W-MON"):
         last_day = end - pd.Timedelta(days=1)
-        return (
-            f"{start:%d.%m.%Y} — "
-            f"{last_day:%d.%m.%Y}"
-        )
+        return f"{start:%d.%m.%Y} — {last_day:%d.%m.%Y}"
 
-    return (
-        f"{start:%d.%m.%Y %H:%M} — "
-        f"{end:%d.%m.%Y %H:%M}"
-    )
+    return f"{start:%d.%m.%Y %H:%M} — {end:%d.%m.%Y %H:%M}"
 
 
 def _bar_width_ms(freq):
@@ -208,33 +196,23 @@ def build_incident_chart(
 
     fig = go.Figure()
 
-
     # Подписи интервалов для всплывающей подсказки
     interval_labels = []
 
     for timestamp in grouped["Время"]:
         interval_end = _next_bucket_start(timestamp, freq)
 
-        interval_labels.append(
-            _format_interval(timestamp, interval_end, freq)
-        )
+        interval_labels.append(_format_interval(timestamp, interval_end, freq))
 
     if freq == "MS":
         widths = [
-            (
-                _next_bucket_start(ts, freq) - ts
-            ).total_seconds() * 1000 * 0.75
+            (_next_bucket_start(ts, freq) - ts).total_seconds() * 1000 * 0.75
             for ts in grouped["Время"]
         ]
     else:
         widths = _bar_width_ms(freq)
 
-    centers = [
-        ts + (
-            _next_bucket_start(ts, freq) - ts
-        ) / 2
-        for ts in grouped["Время"]
-    ]
+    centers = [ts + (_next_bucket_start(ts, freq) - ts) / 2 for ts in grouped["Время"]]
 
     for level, color in COLORS.items():
         fig.add_bar(
@@ -244,45 +222,40 @@ def build_incident_chart(
             marker_color=color,
             width=widths,
             customdata=interval_labels,
-            hovertemplate=(
-                "%{customdata}"
-                "<br>Инцидентов: %{y:d}"
-                "<extra></extra>"
-            ),
+            hovertemplate=("%{customdata}<br>Инцидентов: %{y:d}<extra></extra>"),
         )
-
 
     fig.update_layout(
         barmode="stack",
         bargap=0.18,
         height=430,
-        margin=dict(l=40, r=20, t=20, b=90),
+        margin={"l": 40, "r": 20, "t": 20, "b": 90},
         hovermode="closest",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(
-            orientation="h",
-            x=0,
-            y=-0.22,
-            xanchor="left",
-            yanchor="top",
-        ),
-        xaxis=dict(
-            title=None,
-            showgrid=False,
-            rangeslider=dict(visible=False),
-            automargin=True,
-        ),
-        yaxis=dict(
-            title="Количество инцидентов",
-            rangemode="tozero",
-            gridcolor="#E8ECF0",
-            zeroline=False,
-            tickformat="d",
-            dtick=1 if grouped[list(COLORS)].sum(axis=1).max() <= 10 else None,
-            nticks=8,
-            fixedrange=True,
-        ),
+        legend={
+            "orientation": "h",
+            "x": 0,
+            "y": -0.22,
+            "xanchor": "left",
+            "yanchor": "top",
+        },
+        xaxis={
+            "title": None,
+            "showgrid": False,
+            "rangeslider": {"visible": False},
+            "automargin": True,
+        },
+        yaxis={
+            "title": "Количество инцидентов",
+            "rangemode": "tozero",
+            "gridcolor": "#E8ECF0",
+            "zeroline": False,
+            "tickformat": "d",
+            "dtick": 1 if grouped[list(COLORS)].sum(axis=1).max() <= 10 else None,
+            "nticks": 8,
+            "fixedrange": True,
+        },
         dragmode="zoom",
         showlegend=True,
     )
@@ -300,7 +273,6 @@ def build_incident_chart(
         ],
         autorange=False,
     )
-
 
     return fig
 
@@ -332,6 +304,7 @@ def extract_visible_range(payload: dict):
 
     return start, end
 
+
 # -----------------------------------------
 # Краткая статистика
 # -----------------------------------------
@@ -341,23 +314,14 @@ SUMMARY_MISSING_VALUES = {
     "не указан",
 }
 
+
 def _count_missing(df: pd.DataFrame, column: str) -> int:
     if column not in df.columns:
         return 0
 
-    values = (
-        df[column]
-        .astype("string")
-        .str.strip()
-        .str.casefold()
-    )
+    values = df[column].astype("string").str.strip().str.casefold()
 
-    return int(
-        (
-            values.isna()
-            | values.isin(SUMMARY_MISSING_VALUES)
-        ).sum()
-    )
+    return int((values.isna() | values.isin(SUMMARY_MISSING_VALUES)).sum())
 
 
 def _count_summary_metrics(data: pd.DataFrame) -> dict:
@@ -371,19 +335,11 @@ def _count_summary_metrics(data: pd.DataFrame) -> dict:
 
     return {
         "new": len(data),
-
-        "critical": int(
-            (
-                data["Уровень"]
-                == Severity.CRITICAL.label
-            ).sum()
-        ),
-
+        "critical": int((data["Уровень"] == Severity.CRITICAL.label).sum()),
         "no_verdict": _count_missing(
             data,
             Col.VERDICT,
         ),
-
         "no_owner": _count_missing(
             data,
             Col.ASSIGNEE,
@@ -420,11 +376,7 @@ def calculate_summary_comparison(
     # Текущий период
     current_data = data[
         (data[Col.CREATED] >= start)
-        & (
-            (data[Col.CREATED] < end)
-            if custom_range
-            else (data[Col.CREATED] <= end)
-        )
+        & ((data[Col.CREATED] < end) if custom_range else (data[Col.CREATED] <= end))
     ]
 
     current = _count_summary_metrics(current_data)
@@ -440,8 +392,7 @@ def calculate_summary_comparison(
     previous_start = start - duration
 
     previous_data = data[
-        (data[Col.CREATED] >= previous_start)
-        & (data[Col.CREATED] < start)
+        (data[Col.CREATED] >= previous_start) & (data[Col.CREATED] < start)
     ]
 
     previous = _count_summary_metrics(previous_data)
@@ -463,9 +414,7 @@ def calculate_summary_comparison(
         else:
             arrow = "→"
 
-        changes[key] = (
-            f"{arrow} {abs(difference):.0f}%"
-        )
+        changes[key] = f"{arrow} {abs(difference):.0f}%"
 
     return {
         "current": current,

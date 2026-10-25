@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 import pytest
 
-from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date 
+from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
 
 
 @pytest.mark.parametrize(

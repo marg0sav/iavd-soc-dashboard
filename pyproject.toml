@@ -23,6 +23,7 @@ packages = [{ include = "soc_dashboard", from = "src" }]
 [dependency-groups]
 dev = [
     "pytest (>=9.1.1,<10.0.0)",
+    "ruff (>=0.17.2,<0.18.0)",
 ]
 
 [tool.pytest.ini_options]
