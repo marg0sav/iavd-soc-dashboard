@@ -3,12 +3,15 @@ from datetime import datetime, time, timedelta
 import pandas as pd
 import taipy.gui.builder as tgb
 
+from soc_dashboard.analytics import (
+    build_incident_chart,
+    calculate_summary_comparison,
+    extract_visible_range,
+)
 from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Col, Period
 from soc_dashboard.data.data import get_incident_service
-from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
-from soc_dashboard.analytics import build_incident_chart, extract_visible_range, calculate_summary_comparison
 from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
-
+from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
 card_df = empty_card()

@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+
 from soc_dashboard.constants import NO_DATA, Col, Period
 from soc_dashboard.severity import Severity, parse_severity
 

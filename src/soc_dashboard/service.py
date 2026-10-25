@@ -1,4 +1,5 @@
 import pandas as pd
+
 from soc_dashboard.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE, Col
 from soc_dashboard.repository import IncidentRepository
 from soc_dashboard.severity import parse_severity
