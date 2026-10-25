@@ -21,7 +21,7 @@ def on_init(state):
 def main():
     gui = Gui(
         pages=pages,
-        css_file=str(Path(__file__).resolve().parents[2] / "styles.css"),
+        css_file="assets/styles.css",
     )
     
     gui.on_init = on_init
