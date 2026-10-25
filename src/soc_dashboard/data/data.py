@@ -9,7 +9,9 @@ from soc_dashboard.service import IncidentService
 # например в Docker) папки data/ рядом не будет — нужен путь из настройки
 # SOC_DATA_PATH (см. REFACTORING_PLAN.md, «Известные проблемы»).
 PATH_TO_DATA = (
-    Path(__file__).resolve().parents[3] / "data" / "iavd_1000_incidents_raw_target.parquet"
+    Path(__file__).resolve().parents[3]
+    / "data"
+    / "iavd_1000_incidents_raw_target.parquet"
 )
 
 

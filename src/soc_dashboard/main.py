@@ -21,7 +21,7 @@ def main():
         pages=pages,
         css_file="assets/styles.css",
     )
-    
+
     gui.on_init = on_init
 
     gui.run(
@@ -30,6 +30,7 @@ def main():
         host="127.0.0.1",
         port=5000,
     )
+
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,7 @@ class IncidentRepository:
     def __init__(self, dataset_path: str | Path):
         self.dataset_path = Path(dataset_path)
         self._df = self._load()
-        
+
     def _load(self) -> pd.DataFrame:
         df = pd.read_parquet(self.dataset_path)
         df.columns = df.columns.astype(str).str.strip()
@@ -41,9 +41,7 @@ class IncidentRepository:
         return self._df.copy()
 
     def get_by_id(self, entity_id: str) -> dict | None:
-        rows = self._df[
-            self._df[Col.ID] == str(entity_id)
-        ]
+        rows = self._df[self._df[Col.ID] == str(entity_id)]
 
         if rows.empty:
             return None

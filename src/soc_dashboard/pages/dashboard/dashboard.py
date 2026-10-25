@@ -67,7 +67,9 @@ def default_summary_dates():
 
 
 def on_apply_summary_range(state):
-    date_from, date_to = (tgb_date_range_to_date(value) for value in state.summary_dates)
+    date_from, date_to = (
+        tgb_date_range_to_date(value) for value in state.summary_dates
+    )
 
     if date_from is None or date_to is None:
         state.summary_date_error = "Выберите дату начала и окончания"
@@ -81,6 +83,7 @@ def on_apply_summary_range(state):
 
     state.summary_period = Period.CUSTOM
     state.summary_date_error = ""
+
 
 def update_summary(state, period, date_from, date_to):
     incidents = get_incident_service().repository.get_all()
@@ -114,6 +117,7 @@ def on_summary_period_change(state, var_name, value):
     state.summary_date_error = ""
     update_summary(state, value, None, None)
 
+
 def on_stats_period_change(state, var_name, value):
     incidents = get_incident_service().repository.get_all()
 
@@ -123,6 +127,7 @@ def on_stats_period_change(state, var_name, value):
         period=value,
         visible_range=None,
     )
+
 
 def on_stats_range_change(state, id, payload):
     visible_range = extract_visible_range(payload)
@@ -139,6 +144,7 @@ def on_stats_range_change(state, id, payload):
         period=state.stats_period,
         visible_range=visible_range,
     )
+
 
 def load_incident(state, entity_id):
     state.card_df = get_incident_service().get_card(entity_id)
@@ -197,7 +203,6 @@ def on_reset(state):
 
 
 with tgb.Page() as dashboard_page:
-
     with tgb.part(class_name="panel"):
         tgb.text("## Динамика новых инцидентов", mode="md")
 
@@ -216,7 +221,6 @@ with tgb.Page() as dashboard_page:
         )
 
     with tgb.part(class_name="summary-section"):
-
         with tgb.layout(
             columns="auto auto auto",
             class_name="summary-controls",
@@ -251,7 +255,6 @@ with tgb.Page() as dashboard_page:
             columns="1 1 1 1",
             class_name="summary-grid",
         ):
-
             with tgb.part(class_name="summary-card"):
                 tgb.text(
                     "Новые инциденты",

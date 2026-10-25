@@ -36,6 +36,7 @@ def format_value(value) -> str:
 def empty_card() -> pd.DataFrame:
     return pd.DataFrame(columns=CARD_COLUMNS)
 
+
 class IncidentService:
     def __init__(self, repository: IncidentRepository):
         self.repository = repository
@@ -75,9 +76,7 @@ class IncidentService:
             result[column] = df[column].map(format_value)
 
         if severity != ALL:
-            result = result[
-                result[Col.SEVERITY] == severity
-            ]
+            result = result[result[Col.SEVERITY] == severity]
 
         if search.strip():
             mask = result.apply(
@@ -94,11 +93,7 @@ class IncidentService:
         return result.reset_index(drop=True)
 
     def get_severities(self) -> list[str]:
-        values = (
-            self.get_queue()[Col.SEVERITY]
-            .drop_duplicates()
-            .tolist()
-        )
+        values = self.get_queue()[Col.SEVERITY].drop_duplicates().tolist()
 
         return [ALL, *values]
 

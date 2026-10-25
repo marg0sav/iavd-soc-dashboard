@@ -20,19 +20,9 @@ class Severity(Enum):
         self.aliases = aliases
 
 
-_BY_ALIAS = {
-    alias: severity
-    for severity in Severity
-    for alias in severity.aliases
-}
+_BY_ALIAS = {alias: severity for severity in Severity for alias in severity.aliases}
 
 
 def parse_severity(values: pd.Series) -> pd.Series:
     """Приводит сырые значения к Severity, нераспознанные становятся NaN."""
-    return (
-        values
-        .astype("string")
-        .str.strip()
-        .str.casefold()
-        .map(_BY_ALIAS)
-    )
+    return values.astype("string").str.strip().str.casefold().map(_BY_ALIAS)
