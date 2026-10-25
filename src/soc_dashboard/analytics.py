@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
-from src.constants import Col
-from src.severity import Severity, parse_severity
+from soc_dashboard.constants import Col
+from soc_dashboard.severity import Severity, parse_severity
 
 # Уровень для пустой или нераспознанной критичности
 UNSPECIFIED = "Не указана"
