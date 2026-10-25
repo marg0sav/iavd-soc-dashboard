@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import taipy.gui.builder as tgb
@@ -33,6 +35,13 @@ PERIOD_OPTIONS = [
 stats_period = "30 дней"
 summary_period = "24 часа"
 
+summary_period_options = PERIOD_OPTIONS + ["Свой период"]
+
+summary_date_from = ""
+summary_date_to = ""
+
+summary_date_error = ""
+
 stats_figure = None
 stats_zoom_range = None
 
@@ -51,6 +60,76 @@ summary_no_verdict_change = "—"
 summary_no_owner_change = "—"
 
 _service: IncidentService | None = None
+
+def format_date_input(value):
+    text = str(value or "").strip()
+
+    # Разрешаем только цифры и точки
+    if not re.fullmatch(r"[0-9.]*", text):
+        raise ValueError("Разрешены только цифры и точки")
+
+    digits = text.replace(".", "")[:8]
+
+    parts = [
+        digits[:2],
+        digits[2:4],
+        digits[4:8],
+    ]
+
+    return ".".join(part for part in parts if part)
+
+
+def parse_date_input(value):
+    if not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", value):
+        raise ValueError(
+            "Введите дату полностью: ДД.ММ.ГГГГ"
+        )
+
+    try:
+        return datetime.strptime(value, "%d.%m.%Y").date()
+    except ValueError:
+        raise ValueError("Указана несуществующая дата")
+
+def on_apply_summary_range(state):
+    try:
+        date_from = parse_date_input(state.summary_date_from)
+        date_to = parse_date_input(state.summary_date_to)
+
+        if date_from > date_to:
+            raise ValueError(
+                "Дата начала не может быть позже даты окончания"
+            )
+
+        if _service is None:
+            raise ValueError("Данные ещё не загружены")
+
+        incidents = _service.repository.get_all()
+
+        result = calculate_summary_comparison(
+            incidents,
+            period="Свой период",
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        current = result["current"]
+        changes = result["changes"]
+
+        state.summary_new = current["new"]
+        state.summary_critical = current["critical"]
+        state.summary_no_verdict = current["no_verdict"]
+        state.summary_no_owner = current["no_owner"]
+
+        state.summary_new_change = changes["new"]
+        state.summary_critical_change = changes["critical"]
+        state.summary_no_verdict_change = changes["no_verdict"]
+        state.summary_no_owner_change = changes["no_owner"]
+
+        state.summary_period = "Свой период"
+        state.summary_date_error = ""
+
+    except ValueError as exc:
+        state.summary_date_error = str(exc)
 
 def update_summary(state, period):
     incidents = _service.repository.get_all()
@@ -75,7 +154,20 @@ def update_summary(state, period):
 
 
 def on_summary_period_change(state, var_name, value):
+    if value == "Свой период":
+        on_apply_summary_range(state)
+        return
+
+    state.summary_date_error = ""
     update_summary(state, value)
+
+def on_summary_date_change(state, var_name, value):
+    try:
+        formatted = format_date_input(value)
+        setattr(state, var_name, formatted)
+        state.summary_date_error = ""
+    except ValueError as exc:
+        state.summary_date_error = str(exc)
 
 def on_stats_period_change(state, var_name, value):
     incidents = _service.repository.get_all()
@@ -172,11 +264,42 @@ def build_page():
 
         with tgb.part(class_name="summary-section"):
 
-            tgb.toggle(
-                "{summary_period}",
-                lov=PERIOD_OPTIONS,
-                on_change=on_summary_period_change,
-                class_name="summary-period-toggle",
+            with tgb.layout(
+                columns="auto 140px 140px auto",
+                class_name="summary-controls",
+            ):
+                tgb.toggle(
+                    "{summary_period}",
+                    lov=summary_period_options,
+                    on_change=on_summary_period_change,
+                    class_name="summary-period-toggle",
+                )
+
+                tgb.input(
+                    "{summary_date_from}",
+                    label="С",
+                    on_change=on_summary_date_change,
+                    change_delay=500,
+                    class_name="summary-date-input",
+                )
+
+                tgb.input(
+                    "{summary_date_to}",
+                    label="По",
+                    on_change=on_summary_date_change,
+                    change_delay=500,
+                    class_name="summary-date-input",
+                )
+
+                tgb.button(
+                    "Применить",
+                    on_action=on_apply_summary_range,
+                    class_name="summary-apply-button",
+                )
+
+            tgb.text(
+                "{summary_date_error}",
+                class_name="summary-date-error",
             )
 
             with tgb.layout(

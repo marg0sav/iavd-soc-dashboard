@@ -394,6 +394,8 @@ def _count_summary_metrics(data: pd.DataFrame) -> dict:
 def calculate_summary_comparison(
     df: pd.DataFrame,
     period: str = "24 часа",
+    date_from=None,
+    date_to=None,
 ) -> dict:
 
     data = _normalize_df(df)
@@ -407,17 +409,27 @@ def calculate_summary_comparison(
             "changes": changes,
         }
 
-    start, end = _get_period_bounds(data, period)
+    custom_range = date_from is not None and date_to is not None
+
+    if custom_range:
+        start = pd.Timestamp(date_from).tz_localize("UTC")
+        end = pd.Timestamp(date_to).tz_localize("UTC") + pd.Timedelta(days=1)
+    else:
+        start, end = _get_period_bounds(data, period)
 
     # Текущий период
     current_data = data[
         (data[Col.CREATED] >= start)
-        & (data[Col.CREATED] <= end)
+        & (
+            (data[Col.CREATED] < end)
+            if custom_range
+            else (data[Col.CREATED] <= end)
+        )
     ]
 
     current = _count_summary_metrics(current_data)
 
-    if period == "Весь период":
+    if period == "Весь период" and not custom_range:
         return {
             "current": current,
             "changes": changes,
