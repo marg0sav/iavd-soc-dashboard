@@ -4,7 +4,9 @@ import pandas as pd
 import pytest
 
 from soc_dashboard.analytics import calculate_summary_comparison
-from soc_dashboard.constants import NO_DATA, Col, Period
+from soc_dashboard.constants import NO_DATA
+from soc_dashboard.domain.columns import Col
+from soc_dashboard.domain.period import Period
 
 
 @dataclass(kw_only=True)

@@ -1,8 +1,9 @@
 import pandas as pd
 
-from soc_dashboard.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE, Col
+from soc_dashboard.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE
+from soc_dashboard.domain.columns import Col
+from soc_dashboard.domain.severity import parse_severity
 from soc_dashboard.repository import IncidentRepository
-from soc_dashboard.severity import parse_severity
 
 QUEUE_ID = "ID"
 QUEUE_CREATED = "Создан (UTC)"

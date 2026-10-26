@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from soc_dashboard.constants import DATETIME_COLUMNS, Col
+from soc_dashboard.domain.columns import DATETIME_COLUMNS, Col
 
 
 class IncidentRepository:
