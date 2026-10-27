@@ -8,8 +8,10 @@ from soc_dashboard.analytics import (
     calculate_summary_comparison,
     extract_visible_range,
 )
-from soc_dashboard.constants import ALL, NO_DATA, PERIOD_OPTIONS, Col, Period
+from soc_dashboard.constants import ALL, NO_DATA
 from soc_dashboard.data.data import get_incident_service
+from soc_dashboard.domain.columns import Col
+from soc_dashboard.domain.period import PERIOD_OPTIONS, Period
 from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 

@@ -1,5 +1,5 @@
-from soc_dashboard.constants import Col
 from soc_dashboard.data.data import PATH_TO_DATA
+from soc_dashboard.domain.columns import Col
 from soc_dashboard.repository import IncidentRepository
 
 
