@@ -230,15 +230,15 @@ def build_incident_chart(
     fig.update_layout(
         barmode="stack",
         bargap=0.18,
-        height=430,
-        margin={"l": 40, "r": 20, "t": 20, "b": 90},
+        autosize=True,
+        margin={"l": 40, "r": 20, "t": 20, "b": 54},
         hovermode="closest",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         legend={
             "orientation": "h",
             "x": 0,
-            "y": -0.22,
+            "y": -0.13,
             "xanchor": "left",
             "yanchor": "top",
         },

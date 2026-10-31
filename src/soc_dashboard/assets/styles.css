@@ -1,17 +1,102 @@
 body {
+    margin: 0;
     background: #f6f8fb;
 }
 
-.taipy-content {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 20px;
+.soc-header, .soc-dashboard, .soc-dashboard * {
+    box-sizing: border-box;
 }
 
-.panel {
+.soc-header, .soc-dashboard {
+    width: min(calc(100% - 40px), 1840px);
+    margin-inline: auto;
+}
+
+.soc-header { align-items: center; }
+.soc-header h1 { margin: 0; font-size: 24px; }
+.soc-dashboard { display: grid; gap: 12px; padding-block: 6px 16px; }
+
+.soc-toolbar { display: flex; }
+.soc-toolbar, .soc-filters {
+    align-items: center;
+    gap: 12px;
+}
+
+.soc-toolbar h2 { margin: 0; font-size: 17px; line-height: 1.25; }
+.soc-toolbar p { margin: 0; }
+.soc-toolbar .soc-period { min-height: 0; margin: 0; padding: 0; }
+.soc-period .MuiToggleButtonGroup-root { flex-wrap: nowrap; }
+
+.soc-period .MuiToggleButton-root {
+    min-height: 26px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    text-transform: none;
+}
+
+.soc-period .MuiToggleButton-root .MuiTypography-root { font-size: 12px; }
+
+.soc-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 212px));
+    gap: 10px;
+}
+
+.soc-metric, .soc-panel {
     background: white;
     border: 1px solid #e4e7ec;
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+.soc-metric {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding: 8px 12px;
+}
+
+.soc-metric > :first-child { grid-column: 1 / -1; }
+.metric-label { font-size: 13px; }
+.metric-value { font-size: 24px; font-weight: 700; line-height: 1.15; }
+.metric-change { font-size: 12px; color: #625c5a; }
+.metric-critical .metric-value { color: #B54863; }
+
+.soc-panels {
+    --plot-height: clamp(280px, 48dvh, 540px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.soc-panel { min-width: 0; padding: 12px; }
+
+.soc-panel > .soc-toolbar {
+    justify-content: space-between;
+    min-height: 32px;
+    margin-bottom: 8px;
+}
+
+.soc-filters {
+    display: grid;
+    grid-template-columns: minmax(160px, 280px) 180px auto;
+    justify-content: start;
+    margin-bottom: 8px;
+}
+
+.soc-filters .MuiFormControl-root { width: 100%; }
+.soc-toolbar .taipy-date-range-picker { width: 155px; }
+
+.soc-queue table { table-layout: fixed; width: 100%; }
+.soc-queue thead th:first-child { width: 8%; }
+.soc-queue thead th:nth-child(2) { width: 17%; }
+.soc-queue thead th:nth-child(3) { width: 27%; }
+.soc-queue thead th:nth-child(4) { width: 14%; }
+.soc-queue thead th:nth-child(5) { width: 14%; }
+.soc-queue thead th:nth-child(6) { width: 20%; }
+
+.soc-queue .MuiTableCell-root {
+    padding: 6px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
