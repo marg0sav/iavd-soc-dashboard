@@ -14,7 +14,7 @@ body {
 
 .soc-header { align-items: center; }
 .soc-header h1 { margin: 0; font-size: 24px; }
-.soc-dashboard { display: grid; gap: 12px; padding-block: 6px 16px; }
+.soc-dashboard { display: grid; gap: 6px; padding-block: 4px; }
 
 .soc-toolbar { display: flex; }
 .soc-toolbar, .soc-filters {
@@ -38,7 +38,7 @@ body {
 
 .soc-metrics {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 212px));
+    grid-template-columns: repeat(4, minmax(0, 195px));
     gap: 10px;
 }
 
@@ -53,23 +53,23 @@ body {
     grid-template-columns: auto 1fr;
     align-items: baseline;
     gap: 2px 8px;
-    padding: 8px 12px;
+    padding: 5px 10px;
 }
 
-.soc-metric > :first-child { grid-column: 1 / -1; }
+.soc-metric > :first-child { grid-column: 1 / -1; line-height: 18px; }
 .metric-label { font-size: 13px; }
 .metric-value { font-size: 24px; font-weight: 700; line-height: 1.15; }
 .metric-change { font-size: 12px; color: #625c5a; }
 .metric-critical .metric-value { color: #B54863; }
 
 .soc-panels {
-    --plot-height: clamp(280px, 48dvh, 540px);
+    --plot-height: min(500px, calc(100dvh - 338px));
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 12px;
 }
 
-.soc-panel { min-width: 0; padding: 12px; }
+.soc-panel { min-width: 0; padding: 8px 12px; }
 
 .soc-panel > .soc-toolbar {
     justify-content: space-between;
@@ -85,8 +85,25 @@ body {
 }
 
 .soc-filters .MuiFormControl-root { width: 100%; }
-.soc-toolbar .taipy-date-range-picker { width: 155px; }
+.soc-summary-controls { --control-height: 36px; }
+.soc-summary-controls .MuiToggleButton-root,
+.soc-summary-controls .MuiOutlinedInput-root,
+.soc-summary-controls .MuiButton-root {
+    height: var(--control-height);
+    min-height: 0;
+    font-size: 13px;
+}
 
+.soc-summary-controls .MuiOutlinedInput-input,
+.soc-filters .MuiOutlinedInput-input { padding-block: 7px; }
+.soc-summary-controls .MuiFormControl-root { width: 138px; }
+.soc-filters .MuiOutlinedInput-root,
+.soc-filters .MuiButton-root { height: 36px; min-height: 0; }
+.soc-filters .MuiInputLabel-root:not(.MuiInputLabel-shrink) { top: 0; transform: translate(14px, 7px); }
+.soc-queue .MuiTableContainer-root { overscroll-behavior-y: contain; }
+
+.soc-queue .MuiTablePagination-toolbar { min-height: 34px; }
+.soc-queue .MuiTablePagination-actions button { padding: 4px; }
 .soc-queue table { table-layout: fixed; width: 100%; }
 .soc-queue thead th:first-child { width: 8%; }
 .soc-queue thead th:nth-child(2) { width: 17%; }
@@ -96,7 +113,13 @@ body {
 .soc-queue thead th:nth-child(6) { width: 20%; }
 
 .soc-queue .MuiTableCell-root {
-    padding: 6px;
+    padding: 3px 5px;
     font-size: 12px;
-    overflow-wrap: anywhere;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+.soc-queue td .MuiBadge-root { max-width: 100%; }
+.soc-queue td .MuiBox-root { overflow: hidden; text-overflow: ellipsis; }

@@ -213,7 +213,7 @@ def on_reset(state):
 
 with tgb.Page() as dashboard_page:
     with tgb.part(class_name="soc-dashboard"):
-        with tgb.part(class_name="soc-toolbar"):
+        with tgb.part(class_name="soc-toolbar soc-summary-controls"):
             tgb.text("## Сводка", mode="md")
             tgb.toggle(
                 "{summary_period}", lov=summary_period_options,
@@ -255,8 +255,8 @@ with tgb.Page() as dashboard_page:
 
                 tgb.table(
                     "{queue_df}", on_action=on_row_selected, editable=False,
-                    page_size=5, page_size_options=[5],
-                    width="100%", height="calc(var(--plot-height) - 116px)",
+                    page_size=20, page_size_options=[20],
+                    width="100%", height="min(360px, calc(100dvh - 395px))",
                     class_name="soc-queue",
                 )
 
