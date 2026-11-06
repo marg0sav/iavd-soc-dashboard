@@ -11,7 +11,7 @@ from soc_dashboard.service import IncidentService
 PATH_TO_DATA = (
     Path(__file__).resolve().parents[3]
     / "data"
-    / "iavd_1000_incidents_raw_target.parquet"
+    / "new_incidents_soc_1000.parquet"
 )
 
 
