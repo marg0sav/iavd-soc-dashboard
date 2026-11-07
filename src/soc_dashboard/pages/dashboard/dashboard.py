@@ -4,10 +4,10 @@ import pandas as pd
 import taipy.gui.builder as tgb
 
 from soc_dashboard.analytics import (
+    build_dashboard_overview,
     build_incident_chart,
     calculate_summary_comparison,
     extract_visible_range,
-    build_dashboard_overview,
 )
 from soc_dashboard.constants import ALL, NO_DATA
 from soc_dashboard.data.data import get_incident_service

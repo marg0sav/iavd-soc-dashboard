@@ -1,8 +1,8 @@
-import pandas as pd
-import plotly.graph_objects as go
-
 from html import escape
 from textwrap import shorten, wrap
+
+import pandas as pd
+import plotly.graph_objects as go
 
 from soc_dashboard.constants import NO_DATA
 from soc_dashboard.domain.columns import Col
@@ -445,7 +445,7 @@ def _format_wait(seconds):
     if pd.isna(seconds):
         return NO_DATA
 
-    seconds = int(round(seconds))
+    seconds = round(seconds)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
@@ -469,26 +469,26 @@ def _overview_bar(values, total, limit=None):
     fig = go.Figure()
     fig.update_layout(
         autosize=True,
-        margin=dict(l=145, r=8, t=8, b=8),
+        margin={"l": 145, "r": 8, "t": 8, "b": 8},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(
-            family="Arial, sans-serif",
-            size=11,
-            color="#625c5a",
-        ),
+        font={
+            "family": "Arial, sans-serif",
+            "size": 11,
+            "color": "#625c5a",
+        },
         showlegend=False,
         bargap=0.48,
-        xaxis=dict(visible=False, fixedrange=True),
-        yaxis=dict(
-            fixedrange=True,
-            autorange="reversed",
-            showgrid=False,
-        ),
+        xaxis={"visible": False, "fixedrange": True},
+        yaxis={
+            "fixedrange": True,
+            "autorange": "reversed",
+            "showgrid": False,
+        },
     )
 
     if counts.empty:
-        fig.update_layout(margin=dict(l=8, r=8, t=8, b=8))
+        fig.update_layout(margin={"l": 8, "r": 8, "t": 8, "b": 8})
         fig.update_yaxes(visible=False)
         fig.add_annotation(
             text="Нет данных за период",
@@ -501,8 +501,6 @@ def _overview_bar(values, total, limit=None):
         return fig
 
     labels = counts.index.astype(str).tolist()
-
-    shares = counts / total * 100
 
     ticktext = [
         "<br>".join(
