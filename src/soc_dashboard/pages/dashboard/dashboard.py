@@ -233,8 +233,10 @@ def on_row_selected(state, var_name, payload):
         load_incident(state, entity_id)
         state.card_open = True
 
+
 def close_card(state):
     state.card_open = False
+
 
 def on_reset(state):
     state.search = ""
@@ -247,11 +249,16 @@ with tgb.Page() as dashboard_page:
         with tgb.part(class_name="soc-toolbar soc-summary-controls"):
             tgb.text("## Сводка", mode="md")
             tgb.toggle(
-                "{summary_period}", lov=summary_period_options,
-                on_change=on_summary_period_change, class_name="soc-period",
+                "{summary_period}",
+                lov=summary_period_options,
+                on_change=on_summary_period_change,
+                class_name="soc-period",
             )
             tgb.date_range(
-                "{summary_dates}", label_start="С", label_end="По", format="dd.MM.yyyy",
+                "{summary_dates}",
+                label_start="С",
+                label_end="По",
+                format="dd.MM.yyyy",
             )
             tgb.button("Применить", on_action=on_apply_summary_range)
 
@@ -313,15 +320,22 @@ with tgb.Page() as dashboard_page:
                 with tgb.part(class_name="soc-filters"):
                     tgb.input("{search}", label="Поиск", on_change=on_filter_change)
                     tgb.selector(
-                        "{severity}", lov="{severity_options}", label="Критичность",
-                        dropdown=True, on_change=on_filter_change,
+                        "{severity}",
+                        lov="{severity_options}",
+                        label="Критичность",
+                        dropdown=True,
+                        on_change=on_filter_change,
                     )
                     tgb.button("Сбросить фильтры", on_action=on_reset)
 
                 tgb.table(
-                    "{queue_df}", on_action=on_row_selected, editable=False,
-                    page_size=20, page_size_options=[20],
-                    width="100%", height="min(420px, calc(100dvh - 390px))",
+                    "{queue_df}",
+                    on_action=on_row_selected,
+                    editable=False,
+                    page_size=20,
+                    page_size_options=[20],
+                    width="100%",
+                    height="min(420px, calc(100dvh - 390px))",
                     class_name="soc-queue",
                 )
 
@@ -385,8 +399,11 @@ with tgb.Page() as dashboard_page:
                         )
 
     with tgb.dialog(
-        "{card_open}", title="Карточка инцидента", width="850px",
-        labels=["Закрыть"], on_action=close_card,
+        "{card_open}",
+        title="Карточка инцидента",
+        width="850px",
+        labels=["Закрыть"],
+        on_action=close_card,
     ):
         tgb.text("{selected_title}")
         tgb.table("{card_df}", editable=False, page_size=20, width="100%")

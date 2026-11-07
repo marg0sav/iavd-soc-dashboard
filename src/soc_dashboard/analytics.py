@@ -426,6 +426,7 @@ def calculate_summary_comparison(
         "changes": changes,
     }
 
+
 def _overview_values(data, column, missing_label):
     values = data.get(
         column,
@@ -433,10 +434,7 @@ def _overview_values(data, column, missing_label):
     )
     values = values.astype("string").str.strip()
 
-    missing = (
-        values.isna()
-        | values.str.casefold().isin(SUMMARY_MISSING_VALUES)
-    )
+    missing = values.isna() | values.str.casefold().isin(SUMMARY_MISSING_VALUES)
 
     return values.mask(missing, missing_label)
 
@@ -518,20 +516,14 @@ def _overview_bar(values, total, limit=None):
         y=labels,
         orientation="h",
         marker_color=[
-            "#DDD8D5"
-            if label in {"Без вердикта", "Не указан"}
-            else "#8D8683"
+            "#DDD8D5" if label in {"Без вердикта", "Не указан"} else "#8D8683"
             for label in labels
         ],
         text=[str(count) for count in counts],
         textposition="outside",
         cliponaxis=False,
         customdata=[escape(label) for label in labels],
-        hovertemplate=(
-            "%{customdata}<br>"
-            "Карточек: %{x:d}"
-            "<extra></extra>"
-        ),
+        hovertemplate=("%{customdata}<br>Карточек: %{x:d}<extra></extra>"),
     )
 
     fig.update_xaxes(range=[0, int(counts.max()) * 1.7])
@@ -555,16 +547,10 @@ def build_dashboard_overview(
     if not data.empty:
         if date_from is not None and date_to is not None:
             start = pd.Timestamp(date_from).tz_localize("UTC")
-            end = (
-                pd.Timestamp(date_to).tz_localize("UTC")
-                + pd.Timedelta(days=1)
-            )
+            end = pd.Timestamp(date_to).tz_localize("UTC") + pd.Timedelta(days=1)
 
             # Последний выбранный день включается полностью
-            data = data[
-                (data[Col.CREATED] >= start)
-                & (data[Col.CREATED] < end)
-            ]
+            data = data[(data[Col.CREATED] >= start) & (data[Col.CREATED] < end)]
         else:
             start, end = _get_period_bounds(data, period)
             data = data[data[Col.CREATED].between(start, end)]
@@ -574,16 +560,18 @@ def build_dashboard_overview(
     flags = (
         _overview_values(data, Col.SLA_TAKE_OVERDUE, "")
         .str.casefold()
-        .map({
-            "true": True,
-            "1": True,
-            "1.0": True,
-            "да": True,
-            "false": False,
-            "0": False,
-            "0.0": False,
-            "нет": False,
-        })
+        .map(
+            {
+                "true": True,
+                "1": True,
+                "1.0": True,
+                "да": True,
+                "false": False,
+                "0": False,
+                "0.0": False,
+                "нет": False,
+            }
+        )
     )
 
     known = int(flags.notna().sum())
@@ -612,11 +600,7 @@ def build_dashboard_overview(
             if known
             else "Нет заполненного SLA"
         ),
-        "take_value": (
-            _format_wait(valid.median())
-            if not valid.empty
-            else NO_DATA
-        ),
+        "take_value": (_format_wait(valid.median()) if not valid.empty else NO_DATA),
         "take_note": f"Медиана по {len(valid)} из {total} карточек",
         "types_figure": _overview_bar(
             _overview_values(data, Col.INCIDENT_TYPE, "Не указан"),

@@ -14,4 +14,9 @@ class Col:
 
 
 # Столбцы с датами, которые приводятся к datetime при загрузке
-DATETIME_COLUMNS = (Col.CREATED, Col.DATE, Col.CLOSED_AT, Col.TAKEN_AT,)
+DATETIME_COLUMNS = (
+    Col.CREATED,
+    Col.DATE,
+    Col.CLOSED_AT,
+    Col.TAKEN_AT,
+)
