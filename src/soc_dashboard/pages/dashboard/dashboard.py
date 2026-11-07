@@ -4,6 +4,7 @@ import pandas as pd
 import taipy.gui.builder as tgb
 
 from soc_dashboard.analytics import (
+    build_dashboard_overview,
     build_incident_chart,
     calculate_summary_comparison,
     extract_visible_range,
@@ -17,6 +18,10 @@ from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 
 queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
 card_df = empty_card()
+
+queue_df = pd.DataFrame(columns=QUEUE_COLUMNS)
+card_df = empty_card()
+card_open = False
 
 search = ""
 severity = ALL
@@ -55,6 +60,20 @@ summary_new_change = NO_DATA
 summary_critical_change = NO_DATA
 summary_no_verdict_change = NO_DATA
 summary_no_owner_change = NO_DATA
+
+summary_sla_value = NO_DATA
+summary_sla_note = "Нет заполненного SLA"
+
+summary_take_value = NO_DATA
+summary_take_note = "Нет корректных дат"
+
+types_figure = None
+verdicts_figure = None
+
+overview_chart_config = {
+    "displayModeBar": False,
+    "responsive": True,
+}
 
 
 def default_summary_dates():
@@ -109,6 +128,22 @@ def update_summary(state, period, date_from, date_to):
     state.summary_critical_change = changes["critical"]
     state.summary_no_verdict_change = changes["no_verdict"]
     state.summary_no_owner_change = changes["no_owner"]
+
+    overview = build_dashboard_overview(
+        incidents,
+        period=period,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+    state.summary_sla_value = overview["sla_value"]
+    state.summary_sla_note = overview["sla_note"]
+
+    state.summary_take_value = overview["take_value"]
+    state.summary_take_note = overview["take_note"]
+
+    state.types_figure = overview["types_figure"]
+    state.verdicts_figure = overview["verdicts_figure"]
 
 
 def on_summary_period_change(state, var_name, value):
@@ -196,6 +231,11 @@ def on_row_selected(state, var_name, payload):
     if index in state.queue_df.index:
         entity_id = state.queue_df.loc[index, QUEUE_ID]
         load_incident(state, entity_id)
+        state.card_open = True
+
+
+def close_card(state):
+    state.card_open = False
 
 
 def on_reset(state):
@@ -205,139 +245,165 @@ def on_reset(state):
 
 
 with tgb.Page() as dashboard_page:
-    with tgb.part(class_name="panel"):
-        tgb.text("## Динамика новых инцидентов", mode="md")
-
-        tgb.toggle(
-            "{stats_period}",
-            lov=PERIOD_OPTIONS,
-            on_change=on_stats_period_change,
-            class_name="stats-period-toggle",
-        )
-
-        tgb.chart(
-            figure="{stats_figure}",
-            width="100%",
-            id="incident-stats-chart",
-            on_range_change=on_stats_range_change,
-        )
-
-    with tgb.part(class_name="summary-section"):
-        with tgb.layout(
-            columns="auto auto auto",
-            class_name="summary-controls",
-        ):
+    with tgb.part(class_name="soc-dashboard"):
+        with tgb.part(class_name="soc-toolbar soc-summary-controls"):
+            tgb.text("## Сводка", mode="md")
             tgb.toggle(
                 "{summary_period}",
                 lov=summary_period_options,
                 on_change=on_summary_period_change,
-                class_name="summary-period-toggle",
+                class_name="soc-period",
             )
-
             tgb.date_range(
                 "{summary_dates}",
                 label_start="С",
                 label_end="По",
                 format="dd.MM.yyyy",
-                class_name="summary-date-input",
             )
+            tgb.button("Применить", on_action=on_apply_summary_range)
 
-            tgb.button(
-                "Применить",
-                on_action=on_apply_summary_range,
-                class_name="summary-apply-button",
-            )
+        with tgb.part(render="{bool(summary_date_error)}"):
+            tgb.text("{summary_date_error}")
 
-        tgb.text(
-            "{summary_date_error}",
-            class_name="summary-date-error",
-        )
+        with tgb.part(class_name="soc-metrics"):
+            for label, key in (
+                ("Новые инциденты", "new"),
+                ("Критические инциденты", "critical"),
+                ("Без вердикта", "no_verdict"),
+                ("Без ответственного", "no_owner"),
+            ):
+                with tgb.part(class_name=f"soc-metric metric-{key}"):
+                    tgb.text(label, class_name="metric-label")
+                    tgb.text(
+                        f"{{summary_{key}}}",
+                        class_name="metric-value",
+                    )
+                    tgb.text(
+                        f"{{summary_{key}_change}}",
+                        class_name="metric-change",
+                    )
 
-        with tgb.layout(
-            columns="1 1 1 1",
-            class_name="summary-grid",
-        ):
-            with tgb.part(class_name="summary-card"):
+            with tgb.part(class_name="soc-metric metric-sla"):
                 tgb.text(
-                    "Новые инциденты",
-                    class_name="summary-label",
+                    "Нарушения SLA взятия в работу",
+                    class_name="metric-label",
                 )
                 tgb.text(
-                    "{summary_new}  {summary_new_change}",
-                    class_name="summary-metric-line",
-                )
-
-            with tgb.part(class_name="summary-card"):
-                tgb.text(
-                    "Критические инциденты",
-                    class_name="summary-label",
+                    "{summary_sla_value}",
+                    class_name="metric-value",
                 )
                 tgb.text(
-                    "{summary_critical}  {summary_critical_change}",
-                    class_name="summary-metric-line critical-metric",
+                    "{summary_sla_note}",
+                    class_name="metric-note",
                 )
 
-            with tgb.part(class_name="summary-card"):
+            with tgb.part(class_name="soc-metric metric-take"):
                 tgb.text(
-                    "Без вердикта",
-                    class_name="summary-label",
-                )
-                tgb.text(
-                    "{summary_no_verdict}  {summary_no_verdict_change}",
-                    class_name="summary-metric-line",
-                )
-
-            with tgb.part(class_name="summary-card"):
-                tgb.text(
-                    "Без ответственного",
-                    class_name="summary-label",
+                    "Время до взятия в работу",
+                    class_name="metric-label",
                 )
                 tgb.text(
-                    "{summary_no_owner}  {summary_no_owner_change}",
-                    class_name="summary-metric-line",
+                    "{summary_take_value}",
+                    class_name="metric-value",
+                )
+                tgb.text(
+                    "{summary_take_note}",
+                    class_name="metric-note",
                 )
 
-    with tgb.part(class_name="panel"):
-        tgb.input(
-            "{search}",
-            label="Поиск",
-            on_change=on_filter_change,
-        )
+        with tgb.part(class_name="soc-panels"):
+            with tgb.part(class_name="soc-panel"):
+                with tgb.part(class_name="soc-toolbar"):
+                    tgb.text("## Очередь инцидентов", mode="md")
+                    tgb.text("Найдено: {queue_count}")
 
-        tgb.selector(
-            "{severity}",
-            lov="{severity_options}",
-            label="Критичность",
-            dropdown=True,
-            on_change=on_filter_change,
-        )
+                with tgb.part(class_name="soc-filters"):
+                    tgb.input("{search}", label="Поиск", on_change=on_filter_change)
+                    tgb.selector(
+                        "{severity}",
+                        lov="{severity_options}",
+                        label="Критичность",
+                        dropdown=True,
+                        on_change=on_filter_change,
+                    )
+                    tgb.button("Сбросить фильтры", on_action=on_reset)
 
-        tgb.button(
-            "Сбросить фильтры",
-            on_action=on_reset,
-        )
+                tgb.table(
+                    "{queue_df}",
+                    on_action=on_row_selected,
+                    editable=False,
+                    page_size=20,
+                    page_size_options=[20],
+                    width="100%",
+                    height="min(420px, calc(100dvh - 390px))",
+                    class_name="soc-queue",
+                )
 
-        tgb.text("Найдено: {queue_count}")
+            with tgb.part(class_name="soc-analytics"):
+                with tgb.part(class_name="soc-panel"):
+                    with tgb.part(class_name="soc-toolbar"):
+                        tgb.text(
+                            "## Динамика инцидентов",
+                            mode="md",
+                        )
+                        tgb.toggle(
+                            "{stats_period}",
+                            lov=PERIOD_OPTIONS,
+                            on_change=on_stats_period_change,
+                            class_name="soc-period",
+                        )
 
-        tgb.table(
-            "{queue_df}",
-            on_action=on_row_selected,
-            editable=False,
-            page_size=10,
-            width="100%",
-        )
+                    tgb.chart(
+                        figure="{stats_figure}",
+                        width="100%",
+                        height="var(--soc-dynamics-height)",
+                        id="incident-stats-chart",
+                        on_range_change=on_stats_range_change,
+                    )
 
-    with tgb.part(class_name="panel"):
-        tgb.text(
-            "## Карточка инцидента",
-            mode="md",
-        )
+                with tgb.part(class_name="soc-breakdowns"):
+                    with tgb.part(
+                        class_name="soc-panel soc-mini-panel",
+                    ):
+                        tgb.text(
+                            "### Топ-5 типов инцидентов",
+                            mode="md",
+                        )
+                        tgb.text(
+                            "За период сводки",
+                            class_name="soc-panel-note",
+                        )
+                        tgb.chart(
+                            figure="{types_figure}",
+                            width="100%",
+                            height="var(--soc-breakdown-height)",
+                            plot_config="{overview_chart_config}",
+                        )
 
+                    with tgb.part(
+                        class_name="soc-panel soc-mini-panel",
+                    ):
+                        tgb.text(
+                            "### Распределение вердиктов",
+                            mode="md",
+                        )
+                        tgb.text(
+                            "За период сводки",
+                            class_name="soc-panel-note",
+                        )
+                        tgb.chart(
+                            figure="{verdicts_figure}",
+                            width="100%",
+                            height="var(--soc-breakdown-height)",
+                            plot_config="{overview_chart_config}",
+                        )
+
+    with tgb.dialog(
+        "{card_open}",
+        title="Карточка инцидента",
+        width="850px",
+        labels=["Закрыть"],
+        on_action=close_card,
+    ):
         tgb.text("{selected_title}")
-
-        tgb.table(
-            "{card_df}",
-            editable=False,
-            page_size=20,
-            width="100%",
-        )
+        tgb.table("{card_df}", editable=False, page_size=20, width="100%")
