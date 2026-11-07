@@ -1,6 +1,9 @@
 import pandas as pd
 import plotly.graph_objects as go
 
+from html import escape
+from textwrap import shorten, wrap
+
 from soc_dashboard.constants import NO_DATA
 from soc_dashboard.domain.columns import Col
 from soc_dashboard.domain.period import Period
@@ -421,4 +424,209 @@ def calculate_summary_comparison(
     return {
         "current": current,
         "changes": changes,
+    }
+
+def _overview_values(data, column, missing_label):
+    values = data.get(
+        column,
+        pd.Series(pd.NA, index=data.index, dtype="string"),
+    )
+    values = values.astype("string").str.strip()
+
+    missing = (
+        values.isna()
+        | values.str.casefold().isin(SUMMARY_MISSING_VALUES)
+    )
+
+    return values.mask(missing, missing_label)
+
+
+def _format_wait(seconds):
+    if pd.isna(seconds):
+        return NO_DATA
+
+    seconds = int(round(seconds))
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+
+    if days:
+        return f"{days} д {hours} ч"
+    if hours:
+        return f"{hours} ч {minutes} мин"
+    if minutes:
+        return f"{minutes} мин {seconds} с"
+
+    return f"{seconds} с"
+
+
+def _overview_bar(values, total, limit=None):
+    counts = values.value_counts()
+
+    if limit is not None:
+        counts = counts.head(limit)
+
+    fig = go.Figure()
+    fig.update_layout(
+        autosize=True,
+        margin=dict(l=145, r=8, t=8, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            family="Arial, sans-serif",
+            size=11,
+            color="#625c5a",
+        ),
+        showlegend=False,
+        bargap=0.48,
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(
+            fixedrange=True,
+            autorange="reversed",
+            showgrid=False,
+        ),
+    )
+
+    if counts.empty:
+        fig.update_layout(margin=dict(l=8, r=8, t=8, b=8))
+        fig.update_yaxes(visible=False)
+        fig.add_annotation(
+            text="Нет данных за период",
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+        )
+        return fig
+
+    labels = counts.index.astype(str).tolist()
+
+    shares = counts / total * 100
+
+    ticktext = [
+        "<br>".join(
+            escape(line)
+            for line in wrap(
+                shorten(label, width=38, placeholder="…"),
+                width=20,
+            )
+        )
+        for label in labels
+    ]
+
+    fig.add_bar(
+        x=counts.tolist(),
+        y=labels,
+        orientation="h",
+        marker_color=[
+            "#DDD8D5"
+            if label in {"Без вердикта", "Не указан"}
+            else "#8D8683"
+            for label in labels
+        ],
+        text=[str(count) for count in counts],
+        textposition="outside",
+        cliponaxis=False,
+        customdata=[escape(label) for label in labels],
+        hovertemplate=(
+            "%{customdata}<br>"
+            "Карточек: %{x:d}"
+            "<extra></extra>"
+        ),
+    )
+
+    fig.update_xaxes(range=[0, int(counts.max()) * 1.7])
+    fig.update_yaxes(
+        tickvals=labels,
+        ticktext=ticktext,
+        type="category",
+    )
+
+    return fig
+
+
+def build_dashboard_overview(
+    df,
+    period=Period.DAY,
+    date_from=None,
+    date_to=None,
+):
+    data = _normalize_df(df)
+
+    if not data.empty:
+        if date_from is not None and date_to is not None:
+            start = pd.Timestamp(date_from).tz_localize("UTC")
+            end = (
+                pd.Timestamp(date_to).tz_localize("UTC")
+                + pd.Timedelta(days=1)
+            )
+
+            # Последний выбранный день включается полностью
+            data = data[
+                (data[Col.CREATED] >= start)
+                & (data[Col.CREATED] < end)
+            ]
+        else:
+            start, end = _get_period_bounds(data, period)
+            data = data[data[Col.CREATED].between(start, end)]
+
+    total = len(data)
+
+    flags = (
+        _overview_values(data, Col.SLA_TAKE_OVERDUE, "")
+        .str.casefold()
+        .map({
+            "true": True,
+            "1": True,
+            "1.0": True,
+            "да": True,
+            "false": False,
+            "0": False,
+            "0.0": False,
+            "нет": False,
+        })
+    )
+
+    known = int(flags.notna().sum())
+    overdue = int(flags.eq(True).sum())
+
+    taken = pd.to_datetime(
+        data.get(
+            Col.TAKEN_AT,
+            pd.Series(pd.NaT, index=data.index),
+        ),
+        format="mixed",
+        dayfirst=True,
+        utc=True,
+        errors="coerce",
+    )
+
+    seconds = (taken - data[Col.CREATED]).dt.total_seconds()
+
+    # Пропуски и взятие в работу раньше создания исключаются
+    valid = seconds[seconds.notna() & seconds.ge(0)]
+
+    return {
+        "sla_value": str(overdue) if known else NO_DATA,
+        "sla_note": (
+            f"{overdue / known:.1%} среди {known} карточек с известным SLA"
+            if known
+            else "Нет заполненного SLA"
+        ),
+        "take_value": (
+            _format_wait(valid.median())
+            if not valid.empty
+            else NO_DATA
+        ),
+        "take_note": f"Медиана по {len(valid)} из {total} карточек",
+        "types_figure": _overview_bar(
+            _overview_values(data, Col.INCIDENT_TYPE, "Не указан"),
+            total,
+            limit=5,
+        ),
+        "verdicts_figure": _overview_bar(
+            _overview_values(data, Col.VERDICT, "Без вердикта"),
+            total,
+        ),
     }

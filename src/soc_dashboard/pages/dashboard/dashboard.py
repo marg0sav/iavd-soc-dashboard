@@ -7,6 +7,7 @@ from soc_dashboard.analytics import (
     build_incident_chart,
     calculate_summary_comparison,
     extract_visible_range,
+    build_dashboard_overview,
 )
 from soc_dashboard.constants import ALL, NO_DATA
 from soc_dashboard.data.data import get_incident_service
@@ -59,6 +60,20 @@ summary_new_change = NO_DATA
 summary_critical_change = NO_DATA
 summary_no_verdict_change = NO_DATA
 summary_no_owner_change = NO_DATA
+
+summary_sla_value = NO_DATA
+summary_sla_note = "Нет заполненного SLA"
+
+summary_take_value = NO_DATA
+summary_take_note = "Нет корректных дат"
+
+types_figure = None
+verdicts_figure = None
+
+overview_chart_config = {
+    "displayModeBar": False,
+    "responsive": True,
+}
 
 
 def default_summary_dates():
@@ -113,6 +128,22 @@ def update_summary(state, period, date_from, date_to):
     state.summary_critical_change = changes["critical"]
     state.summary_no_verdict_change = changes["no_verdict"]
     state.summary_no_owner_change = changes["no_owner"]
+
+    overview = build_dashboard_overview(
+        incidents,
+        period=period,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+    state.summary_sla_value = overview["sla_value"]
+    state.summary_sla_note = overview["sla_note"]
+
+    state.summary_take_value = overview["take_value"]
+    state.summary_take_note = overview["take_note"]
+
+    state.types_figure = overview["types_figure"]
+    state.verdicts_figure = overview["verdicts_figure"]
 
 
 def on_summary_period_change(state, var_name, value):
@@ -236,8 +267,42 @@ with tgb.Page() as dashboard_page:
             ):
                 with tgb.part(class_name=f"soc-metric metric-{key}"):
                     tgb.text(label, class_name="metric-label")
-                    tgb.text(f"{{summary_{key}}}", class_name="metric-value")
-                    tgb.text(f"{{summary_{key}_change}}", class_name="metric-change")
+                    tgb.text(
+                        f"{{summary_{key}}}",
+                        class_name="metric-value",
+                    )
+                    tgb.text(
+                        f"{{summary_{key}_change}}",
+                        class_name="metric-change",
+                    )
+
+            with tgb.part(class_name="soc-metric metric-sla"):
+                tgb.text(
+                    "Нарушения SLA взятия в работу",
+                    class_name="metric-label",
+                )
+                tgb.text(
+                    "{summary_sla_value}",
+                    class_name="metric-value",
+                )
+                tgb.text(
+                    "{summary_sla_note}",
+                    class_name="metric-note",
+                )
+
+            with tgb.part(class_name="soc-metric metric-take"):
+                tgb.text(
+                    "Время до взятия в работу",
+                    class_name="metric-label",
+                )
+                tgb.text(
+                    "{summary_take_value}",
+                    class_name="metric-value",
+                )
+                tgb.text(
+                    "{summary_take_note}",
+                    class_name="metric-note",
+                )
 
         with tgb.part(class_name="soc-panels"):
             with tgb.part(class_name="soc-panel"):
@@ -256,22 +321,68 @@ with tgb.Page() as dashboard_page:
                 tgb.table(
                     "{queue_df}", on_action=on_row_selected, editable=False,
                     page_size=20, page_size_options=[20],
-                    width="100%", height="min(360px, calc(100dvh - 395px))",
+                    width="100%", height="min(420px, calc(100dvh - 390px))",
                     class_name="soc-queue",
                 )
 
-            with tgb.part(class_name="soc-panel"):
-                with tgb.part(class_name="soc-toolbar"):
-                    tgb.text("## Динамика инцидентов", mode="md")
-                    tgb.toggle(
-                        "{stats_period}", lov=PERIOD_OPTIONS,
-                        on_change=on_stats_period_change, class_name="soc-period",
+            with tgb.part(class_name="soc-analytics"):
+                with tgb.part(class_name="soc-panel"):
+                    with tgb.part(class_name="soc-toolbar"):
+                        tgb.text(
+                            "## Динамика инцидентов",
+                            mode="md",
+                        )
+                        tgb.toggle(
+                            "{stats_period}",
+                            lov=PERIOD_OPTIONS,
+                            on_change=on_stats_period_change,
+                            class_name="soc-period",
+                        )
+
+                    tgb.chart(
+                        figure="{stats_figure}",
+                        width="100%",
+                        height="var(--soc-dynamics-height)",
+                        id="incident-stats-chart",
+                        on_range_change=on_stats_range_change,
                     )
 
-                tgb.chart(
-                    figure="{stats_figure}", width="100%", height="var(--plot-height)",
-                    id="incident-stats-chart", on_range_change=on_stats_range_change,
-                )
+                with tgb.part(class_name="soc-breakdowns"):
+                    with tgb.part(
+                        class_name="soc-panel soc-mini-panel",
+                    ):
+                        tgb.text(
+                            "### Топ-5 типов инцидентов",
+                            mode="md",
+                        )
+                        tgb.text(
+                            "За период сводки",
+                            class_name="soc-panel-note",
+                        )
+                        tgb.chart(
+                            figure="{types_figure}",
+                            width="100%",
+                            height="var(--soc-breakdown-height)",
+                            plot_config="{overview_chart_config}",
+                        )
+
+                    with tgb.part(
+                        class_name="soc-panel soc-mini-panel",
+                    ):
+                        tgb.text(
+                            "### Распределение вердиктов",
+                            mode="md",
+                        )
+                        tgb.text(
+                            "За период сводки",
+                            class_name="soc-panel-note",
+                        )
+                        tgb.chart(
+                            figure="{verdicts_figure}",
+                            width="100%",
+                            height="var(--soc-breakdown-height)",
+                            plot_config="{overview_chart_config}",
+                        )
 
     with tgb.dialog(
         "{card_open}", title="Карточка инцидента", width="850px",
