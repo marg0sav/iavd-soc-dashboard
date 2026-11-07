@@ -14,15 +14,20 @@ body {
 
 .soc-header { align-items: center; }
 .soc-header h1 { margin: 0; font-size: 24px; }
-.soc-dashboard { display: grid; gap: 6px; padding-block: 4px; }
+.soc-dashboard {
+    --soc-chart-height: min(200px, calc((100dvh - 360px) / 2));
+    --soc-dynamics-height: calc(var(--soc-chart-height) + 65px);
+    --soc-breakdown-height: calc(var(--soc-chart-height) - 40px);
 
-.soc-toolbar { display: flex; }
-.soc-toolbar, .soc-filters {
-    align-items: center;
-    gap: 12px;
+    display: grid;
+    gap: 6px;
+    padding-block: 4px;
 }
 
-.soc-toolbar h2 { margin: 0; font-size: 17px; line-height: 1.25; }
+.soc-toolbar { display: flex; }
+.soc-toolbar, .soc-filters { align-items: center; gap: 12px; }
+
+.soc-toolbar h2 { margin: 0; font-size: 16px; line-height: 1.2; }
 .soc-toolbar p { margin: 0; }
 .soc-toolbar .soc-period { min-height: 0; margin: 0; padding: 0; }
 .soc-period .MuiToggleButtonGroup-root { flex-wrap: nowrap; }
@@ -38,8 +43,19 @@ body {
 
 .soc-metrics {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 195px));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.soc-panel { min-width: 0; padding: 6px 10px; }
+
+.soc-panel > .soc-toolbar {
+    justify-content: space-between;
+    min-height: 28px;
+    margin-bottom: 4px;
+    gap: 8px;
 }
 
 .soc-metric, .soc-panel {
@@ -48,175 +64,6 @@ body {
     border-radius: 10px;
 }
 
-.soc-metric {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: baseline;
-    gap: 2px 8px;
-    padding: 5px 10px;
-}
-
-.soc-metric > :first-child { grid-column: 1 / -1; line-height: 18px; }
-.metric-label { font-size: 13px; }
-.metric-value { font-size: 24px; font-weight: 700; line-height: 1.15; }
-.metric-change { font-size: 12px; color: #625c5a; }
-.metric-critical .metric-value { color: #B54863; }
-
-.soc-panels {
-    --plot-height: min(500px, calc(100dvh - 338px));
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    gap: 12px;
-}
-
-.soc-panel { min-width: 0; padding: 8px 12px; }
-
-.soc-panel > .soc-toolbar {
-    justify-content: space-between;
-    min-height: 32px;
-    margin-bottom: 8px;
-}
-
-.soc-filters {
-    display: grid;
-    grid-template-columns: minmax(160px, 280px) 180px auto;
-    justify-content: start;
-    margin-bottom: 8px;
-}
-
-.soc-filters .MuiFormControl-root { width: 100%; }
-.soc-summary-controls { --control-height: 36px; }
-.soc-summary-controls .MuiToggleButton-root,
-.soc-summary-controls .MuiOutlinedInput-root,
-.soc-summary-controls .MuiButton-root {
-    height: var(--control-height);
-    min-height: 0;
-    font-size: 13px;
-}
-
-.soc-summary-controls .MuiOutlinedInput-input,
-.soc-filters .MuiOutlinedInput-input { padding-block: 7px; }
-.soc-summary-controls .MuiFormControl-root { width: 138px; }
-.soc-filters .MuiOutlinedInput-root,
-.soc-filters .MuiButton-root { height: 36px; min-height: 0; }
-.soc-filters .MuiInputLabel-root:not(.MuiInputLabel-shrink) { top: 0; transform: translate(14px, 7px); }
-.soc-queue .MuiTableContainer-root { overscroll-behavior-y: contain; }
-
-.soc-queue .MuiTablePagination-toolbar { min-height: 34px; }
-.soc-queue .MuiTablePagination-actions button { padding: 4px; }
-.soc-queue table { table-layout: fixed; width: 100%; }
-.soc-queue thead th:first-child { width: 8%; }
-.soc-queue thead th:nth-child(2) { width: 17%; }
-.soc-queue thead th:nth-child(3) { width: 27%; }
-.soc-queue thead th:nth-child(4) { width: 14%; }
-.soc-queue thead th:nth-child(5) { width: 14%; }
-.soc-queue thead th:nth-child(6) { width: 20%; }
-
-.soc-queue .MuiTableCell-root {
-    padding: 3px 5px;
-    font-size: 12px;
-    line-height: 18px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.soc-queue td .MuiBadge-root { max-width: 100%; }
-.soc-queue td .MuiBox-root { overflow: hidden; text-overflow: ellipsis; }
-
-/* Шесть карточек сводки. */
-.soc-metrics {
-    grid-template-columns: repeat(6, minmax(0, 210px));
-}
-
-.soc-metric {
-    align-content: start;
-    min-height: 88px;
-    padding: 8px 10px;
-}
-
-.soc-metric p {
-    margin: 0;
-}
-
-.soc-metric .metric-label {
-    min-height: 36px;
-}
-
-.metric-note {
-    grid-column: 1 / -1;
-    font-size: 11px;
-    line-height: 1.3;
-    color: #625c5a;
-}
-
-.metric-take .metric-value {
-    grid-column: 1 / -1;
-    font-size: 22px;
-    white-space: nowrap;
-}
-
-/* Правая колонка: динамика и два дополнительных графика. */
-.soc-analytics {
-    display: grid;
-    grid-template-rows: auto auto;
-    align-content: start;
-    gap: 12px;
-    min-width: 0;
-}
-
-.soc-analytics .soc-toolbar {
-    flex-wrap: wrap;
-}
-
-.soc-breakdowns {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    min-width: 0;
-}
-
-.soc-mini-panel {
-    padding: 10px 8px 6px;
-}
-
-.soc-mini-panel h3 {
-    margin: 0 0 3px;
-    font-size: 14px;
-}
-
-.soc-mini-panel p {
-    margin: 0;
-}
-
-.soc-panel-note {
-    font-size: 11px;
-    color: #625c5a;
-}
-
-/* Общая ширина сводки и нижних панелей. */
-.soc-dashboard {
-    --soc-chart-height: min(200px, calc((100dvh - 360px) / 2));
-
-    display: grid;
-    gap: 6px;
-    padding-block: 4px;
-}
-
-.soc-metrics,
-.soc-panels {
-    width: 100%;
-    min-width: 0;
-}
-
-/* Все шесть карточек занимают всю ширину страницы. */
-.soc-metrics {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 10px;
-}
-
-/* Компактные карточки: название, число, пояснение. */
 .soc-metric {
     display: flex;
     flex-direction: column;
@@ -230,16 +77,97 @@ body {
     gap: 2px;
 }
 
-/* Taipy оборачивает каждый текст в отдельный div. */
+.soc-metric > :first-child { line-height: 18px; }
+.metric-value { font-size: 24px; font-weight: 700; line-height: 1.15; }
+.metric-change { font-size: 12px; color: #625c5a; }
+.metric-critical .metric-value { color: #B54863; }
+
+.soc-panels {
+    --plot-height: min(500px, calc(100dvh - 338px));
+
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.soc-filters {
+    display: grid;
+    grid-template-columns: minmax(160px, 280px) 180px auto;
+    justify-content: start;
+    margin-bottom: 6px;
+}
+
+.soc-filters .MuiFormControl-root { width: 100%; }
+.soc-summary-controls {
+    --control-height: 32px;
+    gap: 10px;
+}
+
+.soc-summary-controls .MuiToggleButton-root,
+.soc-summary-controls .MuiOutlinedInput-root,
+.soc-summary-controls .MuiButton-root {
+    height: var(--control-height);
+    min-height: 0;
+    font-size: 12px;
+}
+
+.soc-summary-controls .MuiOutlinedInput-input { padding-block: 5px; }
+.soc-filters .MuiOutlinedInput-input { padding-block: 7px; }
+.soc-summary-controls .MuiFormControl-root { width: 138px; }
+.soc-filters .MuiOutlinedInput-root,
+.soc-filters .MuiButton-root { height: 36px; min-height: 0; }
+.soc-filters .MuiInputLabel-root:not(.MuiInputLabel-shrink) { top: 0; transform: translate(14px, 7px); }
+.soc-queue .MuiTableContainer-root { overflow-y: auto; overscroll-behavior-y: contain; }
+
+.soc-queue .MuiTablePagination-toolbar { min-height: 32px; }
+.soc-queue .MuiTablePagination-actions button { padding: 4px; }
+.soc-queue table { table-layout: fixed; width: 100%; }
+.soc-queue thead th:first-child { width: 8%; }
+.soc-queue thead th:nth-child(2) { width: 17%; }
+.soc-queue thead th:nth-child(3) { width: 27%; }
+.soc-queue thead th:nth-child(4) { width: 14%; }
+.soc-queue thead th:nth-child(5) { width: 14%; }
+.soc-queue thead th:nth-child(6) { width: 20%; }
+
+.soc-queue .MuiTableCell-root { padding: 3px 5px; font-size: 12px;
+    line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.soc-breakdowns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px; min-width: 0;
+}
+.soc-queue td .MuiBadge-root { max-width: 100%; }
+.soc-queue td .MuiBox-root { overflow: hidden; text-overflow: ellipsis; }
+
+.soc-metric p { margin: 0; }
+
+.metric-note { font-size: 11px; line-height: 1.3; color: #625c5a; }
+
+.metric-take .metric-value { font-size: 22px; white-space: nowrap; }
+
+.soc-analytics .soc-toolbar { flex-wrap: nowrap; }
+
+.soc-analytics { display: grid; grid-template-rows: auto auto;
+    align-content: start; gap: 8px; min-width: 0;
+}
+
+.soc-mini-panel { padding: 6px 8px; }
+
+.soc-mini-panel h3 { margin: 0 0 2px; font-size: 13px; line-height: 1.2; }
+
+.soc-mini-panel p { margin: 0; }
+
+.soc-panel-note { font-size: 11px; color: #625c5a; }
+
+
 .soc-metric > div {
     min-width: 0;
     margin: 0;
     padding: 0;
     line-height: 1.2;
-}
-
-.soc-metric p {
-    margin: 0;
 }
 
 .soc-metric .metric-label {
@@ -265,62 +193,6 @@ body {
     line-height: 1.2;
 }
 
-/* Компактная строка выбора периода. */
-.soc-summary-controls {
-    --control-height: 32px;
-    gap: 10px;
-}
-
-.soc-summary-controls .MuiToggleButton-root,
-.soc-summary-controls .MuiOutlinedInput-root,
-.soc-summary-controls .MuiButton-root {
-    height: var(--control-height);
-    min-height: 0;
-    font-size: 12px;
-}
-
-.soc-summary-controls .MuiOutlinedInput-input {
-    padding-block: 5px;
-}
-
-/* Очередь слева, графики справа. */
-.soc-panels {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    align-items: stretch;
-    gap: 12px;
-}
-
-.soc-panel {
-    min-width: 0;
-    padding: 6px 10px;
-}
-
-.soc-panel > .soc-toolbar {
-    min-height: 28px;
-    margin-bottom: 4px;
-    gap: 8px;
-}
-
-.soc-toolbar h2 {
-    margin: 0;
-    font-size: 16px;
-    line-height: 1.2;
-}
-
-/* Правая колонка. */
-.soc-analytics {
-    display: grid;
-    grid-template-rows: auto auto;
-    align-content: start;
-    min-width: 0;
-    gap: 8px;
-}
-
-.soc-analytics .soc-toolbar {
-    flex-wrap: nowrap;
-}
-
 .soc-analytics .soc-period .MuiToggleButton-root {
     min-height: 24px;
     padding: 2px 5px;
@@ -330,32 +202,10 @@ body {
     font-size: 11px;
 }
 
-/* Два небольших графика под динамикой. */
-.soc-breakdowns {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 0;
-    gap: 10px;
-}
-
-.soc-mini-panel {
-    padding: 6px 8px;
-}
-
 .soc-mini-panel > div {
     min-width: 0;
     margin: 0;
     line-height: 1.2;
-}
-
-.soc-mini-panel h3 {
-    margin: 0 0 2px;
-    font-size: 13px;
-    line-height: 1.2;
-}
-
-.soc-mini-panel p {
-    margin: 0;
 }
 
 .soc-mini-panel .soc-panel-note {
@@ -365,26 +215,4 @@ body {
     line-height: 1.2;
 }
 
-.soc-analytics .taipy-chart {
-    display: block;
-    margin: 0;
-}
-
-/* Прокрутка остаётся внутри очереди. */
-.soc-filters {
-    margin-bottom: 6px;
-}
-
-.soc-queue .MuiTableContainer-root {
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-}
-
-.soc-queue .MuiTablePagination-toolbar {
-    min-height: 32px;
-}
-
-.soc-dashboard {
-    --soc-dynamics-height: calc(var(--soc-chart-height) + 45px);
-    --soc-breakdown-height: calc(var(--soc-chart-height) - 40px);
-}
+.soc-analytics .taipy-chart { display: block; margin: 0; }
