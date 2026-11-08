@@ -10,6 +10,7 @@ dependencies = [
     "pyarrow",
     "Flask==3.1.2",
     "plotly>=5.24,<7",
+    "joblib>=1.4,<2",
 ]
 
 [project.scripts]
