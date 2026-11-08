@@ -8,6 +8,7 @@ with tgb.Page() as root_page:
         tgb.navbar(
             lov=[
                 ("/dashboard", "Дашборд"),
+                ("/ml", "Модель ML"),
             ],
         )
 
