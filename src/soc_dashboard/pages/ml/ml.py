@@ -9,7 +9,8 @@ from soc_dashboard.data.data import get_ml_model_metadata
 ml_model_metadata = get_ml_model_metadata()
 
 with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
-    tgb.text("## Модель", mode="md")
+    with tgb.part(class_name="soc-toolbar"):
+        tgb.text("## Модель", mode="md")
 
     if ml_model_metadata is None:
         tgb.text("Модель не обучена/отсутвуют метаданные модели.")
