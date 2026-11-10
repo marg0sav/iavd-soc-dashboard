@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time
 
 import pandas as pd
 import taipy.gui.builder as tgb
@@ -12,7 +12,7 @@ from soc_dashboard.analytics import (
 from soc_dashboard.constants import ALL, NO_DATA
 from soc_dashboard.data.data import get_incident_service
 from soc_dashboard.domain.columns import Col
-from soc_dashboard.domain.period import PERIOD_OPTIONS, Period
+from soc_dashboard.domain.period import PERIOD_OPTIONS, Period, period_to_date_range
 from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 
@@ -34,7 +34,6 @@ queue_count = 0
 # Временные периоды
 # -----------------------------------------
 
-stats_period = "30 дней"
 summary_period = Period.DAY
 
 summary_period_options = PERIOD_OPTIONS + [Period.CUSTOM]
@@ -76,15 +75,39 @@ overview_chart_config = {
 }
 
 
-def default_summary_dates():
-    """Последние 30 дней датасета."""
-    latest = get_incident_service().repository.get_all()[Col.CREATED].max().date()
+def preset_period_to_date_range(period: str) -> tuple[date, date]:
+    """Диапазон дат записей датасета по выбранному периоду."""
 
-    # Полночь без часового пояса: браузер покажет тот же день в любом поясе
-    return [
-        datetime.combine(latest - timedelta(days=29), time()),
-        datetime.combine(latest, time()),
+    # NOTE: ВАЖНО!!! Для статического датасета:
+    # "сегодня" исчисляется от самой новой записи SOC (MAX по Col.Created);
+    #
+    # для реально поступающих данных тут скорее должно быть что то типо time.now().
+    today = (get_incident_service().repository.get_all()[Col.CREATED].max()).date()
+
+    if period == Period.ALL_TIME:
+        # NOTE: Первый день для датасета самая старая (MIN по Col.Created) запись SOC.
+        first_day = (
+            get_incident_service().repository.get_all()[Col.CREATED].min().date()
+        )
+        return (first_day, today)
+
+    return period_to_date_range(period, today)
+
+
+def apply_summary_period(state, period, date_from, date_to):
+    """Единая обработка: toggle, date_range и сводка всегда с единым периодом."""
+    state.summary_period = period
+
+    state.summary_dates = [
+        datetime.combine(date_from, time()),
+        datetime.combine(date_to, time()),
     ]
+
+    state.summary_date_error = ""
+    update_summary(state, period, date_from, date_to)
+    # Очередь и график динамики инцидетнов читают даты из state.summary_dates
+    update_queue(state)
+    update_chart(state)
 
 
 def on_apply_summary_range(state):
@@ -92,18 +115,15 @@ def on_apply_summary_range(state):
         tgb_date_range_to_date(value) for value in state.summary_dates
     )
 
+    # Вторая дата ещё не выбрана: ждём, а не показываем ошибку
     if date_from is None or date_to is None:
-        state.summary_date_error = "Выберите дату начала и окончания"
         return
 
     if date_from > date_to:
         state.summary_date_error = "Дата начала не может быть позже даты окончания"
         return
 
-    update_summary(state, Period.CUSTOM, date_from, date_to)
-
-    state.summary_period = Period.CUSTOM
-    state.summary_date_error = ""
+    apply_summary_period(state, Period.CUSTOM, date_from, date_to)
 
 
 def update_summary(state, period, date_from, date_to):
@@ -148,21 +168,23 @@ def update_summary(state, period, date_from, date_to):
 
 def on_summary_period_change(state, var_name, value):
     if value == Period.CUSTOM:
-        on_apply_summary_range(state)
         return
 
-    state.summary_date_error = ""
-    update_summary(state, value, None, None)
+    apply_summary_period(state, value, *preset_period_to_date_range(value))
 
 
-def on_stats_period_change(state, var_name, value):
-    incidents = get_incident_service().repository.get_all()
+def update_chart(state, visible_range=None):
+    """График динамики за выбранный период, visible_range - зум внутри него."""
+    date_from, date_to = (
+        tgb_date_range_to_date(value) for value in state.summary_dates
+    )
 
-    state.stats_zoom_range = None
+    state.stats_zoom_range = visible_range
     state.stats_figure = build_incident_chart(
-        incidents,
-        period=value,
-        visible_range=None,
+        get_incident_service().repository.get_all(),
+        date_from,
+        date_to,
+        visible_range=visible_range,
     )
 
 
@@ -172,15 +194,7 @@ def on_stats_range_change(state, id, payload):
     if visible_range == state.stats_zoom_range:
         return
 
-    state.stats_zoom_range = visible_range
-
-    incidents = get_incident_service().repository.get_all()
-
-    state.stats_figure = build_incident_chart(
-        incidents,
-        period=state.stats_period,
-        visible_range=visible_range,
-    )
+    update_chart(state, visible_range)
 
 
 def load_incident(state, entity_id):
@@ -189,9 +203,15 @@ def load_incident(state, entity_id):
 
 
 def update_queue(state):
+    date_from, date_to = (
+        tgb_date_range_to_date(value) for value in state.summary_dates
+    )
+
     queue = get_incident_service().get_queue(
         state.search,
         state.severity,
+        date_from,
+        date_to,
     )
 
     state.queue_df = queue
@@ -209,16 +229,11 @@ def update_queue(state):
 
 def on_init(state):
     state.severity_options = get_incident_service().get_severities()
-    state.stats_figure = build_incident_chart(
-        get_incident_service().repository.get_all(),
-        period=state.stats_period,
-        visible_range=None,
+
+    # Очередь и график динамики инцидентов обновятся внутри apply_summary_period вместе со сводкой
+    apply_summary_period(
+        state, state.summary_period, *preset_period_to_date_range(state.summary_period)
     )
-
-    update_queue(state)
-
-    state.summary_dates = default_summary_dates()
-    update_summary(state, state.summary_period, None, None)
 
 
 def on_filter_change(state, var_name, value):
@@ -259,8 +274,8 @@ with tgb.Page() as dashboard_page:
                 label_start="С",
                 label_end="По",
                 format="dd.MM.yyyy",
+                on_change=on_apply_summary_range,
             )
-            tgb.button("Применить", on_action=on_apply_summary_range)
 
         with tgb.part(render="{bool(summary_date_error)}"):
             tgb.text("{summary_date_error}")
@@ -345,12 +360,6 @@ with tgb.Page() as dashboard_page:
                         tgb.text(
                             "## Динамика инцидентов",
                             mode="md",
-                        )
-                        tgb.toggle(
-                            "{stats_period}",
-                            lov=PERIOD_OPTIONS,
-                            on_change=on_stats_period_change,
-                            class_name="soc-period",
                         )
 
                     tgb.chart(
