@@ -12,7 +12,12 @@ METADATA = {
     "data": {"file": "iavd_ml_dataset.parquet", "rows": 196969},
     "features": ["Критичность", "hour"],
     "threshold": 0.7,
-    "metrics": {"accuracy": 0.8795, "precision": 0.5988, "recall": 0.6683, "f1": 0.6316},
+    "metrics": {
+        "accuracy": 0.8795,
+        "precision": 0.5988,
+        "recall": 0.6683,
+        "f1": 0.6316,
+    },
 }
 
 
