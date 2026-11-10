@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time
 
 import pandas as pd
 import taipy.gui.builder as tgb
@@ -12,7 +12,7 @@ from soc_dashboard.analytics import (
 from soc_dashboard.constants import ALL, NO_DATA
 from soc_dashboard.data.data import get_incident_service
 from soc_dashboard.domain.columns import Col
-from soc_dashboard.domain.period import PERIOD_OPTIONS, Period
+from soc_dashboard.domain.period import PERIOD_OPTIONS, Period, period_to_date_range
 from soc_dashboard.pages.dashboard.utils import tgb_date_range_to_date
 from soc_dashboard.service import QUEUE_COLUMNS, QUEUE_ID, empty_card
 
@@ -76,15 +76,36 @@ overview_chart_config = {
 }
 
 
-def default_summary_dates():
-    """Последние 30 дней датасета."""
-    latest = get_incident_service().repository.get_all()[Col.CREATED].max().date()
+def preset_period_to_date_range(period: str) -> tuple[date, date]:
+    """Диапазон дат записей датасета по выбранному периоду."""
 
-    # Полночь без часового пояса: браузер покажет тот же день в любом поясе
-    return [
-        datetime.combine(latest - timedelta(days=29), time()),
-        datetime.combine(latest, time()),
+    # NOTE: ВАЖНО!!! Для статического датасета:
+    # "сегодня" исчисляется от самой новой записи SOC (MAX по Col.Created);
+    #
+    # для реально поступающих данных тут скорее должно быть что то типо time.now().
+    today = (get_incident_service().repository.get_all()[Col.CREATED].max()).date()
+
+    if period == Period.ALL_TIME:
+        # NOTE: Первый день для датасета самая старая (MIN по Col.Created) запись SOC.
+        first_day = (
+            get_incident_service().repository.get_all()[Col.CREATED].min().date()
+        )
+        return (first_day, today)
+
+    return period_to_date_range(period, today)
+
+
+def apply_summary_period(state, period, date_from, date_to):
+    """Единая обработка: toggle, date_range и сводка всегда с единым периодом."""
+    state.summary_period = period
+
+    state.summary_dates = [
+        datetime.combine(date_from, time()),
+        datetime.combine(date_to, time()),
     ]
+
+    state.summary_date_error = ""
+    update_summary(state, period, date_from, date_to)
 
 
 def on_apply_summary_range(state):
@@ -92,18 +113,15 @@ def on_apply_summary_range(state):
         tgb_date_range_to_date(value) for value in state.summary_dates
     )
 
+    # Вторая дата ещё не выбрана: ждём, а не показываем ошибку
     if date_from is None or date_to is None:
-        state.summary_date_error = "Выберите дату начала и окончания"
         return
 
     if date_from > date_to:
         state.summary_date_error = "Дата начала не может быть позже даты окончания"
         return
 
-    update_summary(state, Period.CUSTOM, date_from, date_to)
-
-    state.summary_period = Period.CUSTOM
-    state.summary_date_error = ""
+    apply_summary_period(state, Period.CUSTOM, date_from, date_to)
 
 
 def update_summary(state, period, date_from, date_to):
@@ -148,11 +166,9 @@ def update_summary(state, period, date_from, date_to):
 
 def on_summary_period_change(state, var_name, value):
     if value == Period.CUSTOM:
-        on_apply_summary_range(state)
         return
 
-    state.summary_date_error = ""
-    update_summary(state, value, None, None)
+    apply_summary_period(state, value, *preset_period_to_date_range(value))
 
 
 def on_stats_period_change(state, var_name, value):
@@ -217,8 +233,9 @@ def on_init(state):
 
     update_queue(state)
 
-    state.summary_dates = default_summary_dates()
-    update_summary(state, state.summary_period, None, None)
+    apply_summary_period(
+        state, state.summary_period, *preset_period_to_date_range(state.summary_period)
+    )
 
 
 def on_filter_change(state, var_name, value):
@@ -259,8 +276,8 @@ with tgb.Page() as dashboard_page:
                 label_start="С",
                 label_end="По",
                 format="dd.MM.yyyy",
+                on_change=on_apply_summary_range,
             )
-            tgb.button("Применить", on_action=on_apply_summary_range)
 
         with tgb.part(render="{bool(summary_date_error)}"):
             tgb.text("{summary_date_error}")
