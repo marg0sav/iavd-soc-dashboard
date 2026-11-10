@@ -34,7 +34,6 @@ queue_count = 0
 # Временные периоды
 # -----------------------------------------
 
-stats_period = "30 дней"
 summary_period = Period.DAY
 
 summary_period_options = PERIOD_OPTIONS + [Period.CUSTOM]
@@ -106,8 +105,9 @@ def apply_summary_period(state, period, date_from, date_to):
 
     state.summary_date_error = ""
     update_summary(state, period, date_from, date_to)
-    # Очередь читает даты из state.summary_dates, поэтому после их записи
+    # Очередь и график динамики инцидетнов читают даты из state.summary_dates
     update_queue(state)
+    update_chart(state)
 
 
 def on_apply_summary_range(state):
@@ -173,14 +173,18 @@ def on_summary_period_change(state, var_name, value):
     apply_summary_period(state, value, *preset_period_to_date_range(value))
 
 
-def on_stats_period_change(state, var_name, value):
-    incidents = get_incident_service().repository.get_all()
+def update_chart(state, visible_range=None):
+    """График динамики за выбранный период, visible_range - зум внутри него."""
+    date_from, date_to = (
+        tgb_date_range_to_date(value) for value in state.summary_dates
+    )
 
-    state.stats_zoom_range = None
+    state.stats_zoom_range = visible_range
     state.stats_figure = build_incident_chart(
-        incidents,
-        period=value,
-        visible_range=None,
+        get_incident_service().repository.get_all(),
+        date_from,
+        date_to,
+        visible_range=visible_range,
     )
 
 
@@ -190,15 +194,7 @@ def on_stats_range_change(state, id, payload):
     if visible_range == state.stats_zoom_range:
         return
 
-    state.stats_zoom_range = visible_range
-
-    incidents = get_incident_service().repository.get_all()
-
-    state.stats_figure = build_incident_chart(
-        incidents,
-        period=state.stats_period,
-        visible_range=visible_range,
-    )
+    update_chart(state, visible_range)
 
 
 def load_incident(state, entity_id):
@@ -233,13 +229,8 @@ def update_queue(state):
 
 def on_init(state):
     state.severity_options = get_incident_service().get_severities()
-    state.stats_figure = build_incident_chart(
-        get_incident_service().repository.get_all(),
-        period=state.stats_period,
-        visible_range=None,
-    )
 
-    # Очередь обновится внутри apply_summary_period вместе со сводкой
+    # Очередь и график динамики инцидентов обновятся внутри apply_summary_period вместе со сводкой
     apply_summary_period(
         state, state.summary_period, *preset_period_to_date_range(state.summary_period)
     )
@@ -369,12 +360,6 @@ with tgb.Page() as dashboard_page:
                         tgb.text(
                             "## Динамика инцидентов",
                             mode="md",
-                        )
-                        tgb.toggle(
-                            "{stats_period}",
-                            lov=PERIOD_OPTIONS,
-                            on_change=on_stats_period_change,
-                            class_name="soc-period",
                         )
 
                     tgb.chart(

@@ -1,3 +1,4 @@
+from datetime import date
 from html import escape
 from textwrap import shorten, wrap
 
@@ -21,9 +22,6 @@ COLORS = {
     Severity.HIGH.label: "#B8B1AE",
     Severity.CRITICAL.label: "#B54863",
 }
-
-
-PERIOD_LABELS = ["24 часа", "7 дней", "30 дней", "Год", "Весь период"]
 
 
 def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -57,7 +55,7 @@ def _get_period_bounds(df: pd.DataFrame, period: str):
     return start, end
 
 
-def _choose_frequency(start, end, period=None):
+def _choose_frequency(start, end):
     hours = (end - start).total_seconds() / 3600
     days = hours / 24
 
@@ -83,7 +81,8 @@ def _prepare_grouped(df, start, end, freq):
     data = df[(df[Col.CREATED] >= start) & (df[Col.CREATED] < end)].copy()
 
     start_naive = start.tz_localize(None)
-    end_naive = end.tz_localize(None)
+    # end не входит в интервал: последний столбец - тот, где лежит момент перед end
+    end_naive = (end - pd.Timedelta(microseconds=1)).tz_localize(None)
 
     # Используем начало интервала как временную метку.
     if freq == "MS":
@@ -171,9 +170,11 @@ def _bar_width_ms(freq):
 
 def build_incident_chart(
     df: pd.DataFrame,
-    period: str = "30 дней",
+    date_from: date,
+    date_to: date,
     visible_range: tuple | None = None,
 ):
+    """Динамика инцидентов за даты [date_from, date_to], обе включительно."""
     data = _normalize_df(df)
 
     if data.empty:
@@ -188,7 +189,9 @@ def build_incident_chart(
         )
         return fig
 
-    base_start, base_end = _get_period_bounds(data, period)
+    base_start = pd.Timestamp(date_from, tz="UTC")
+    # Последний выбранный день включается целиком
+    base_end = pd.Timestamp(date_to, tz="UTC") + pd.Timedelta(days=1)
 
     start, end = base_start, base_end
     if visible_range is not None:
@@ -196,7 +199,7 @@ def build_incident_chart(
         start = max(base_start, vr_start)
         end = min(base_end, vr_end)
 
-    freq = _choose_frequency(start, end, period)
+    freq = _choose_frequency(start, end)
     grouped = _prepare_grouped(data, start, end, freq)
 
     fig = go.Figure()
