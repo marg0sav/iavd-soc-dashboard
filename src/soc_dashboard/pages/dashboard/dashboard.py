@@ -106,6 +106,8 @@ def apply_summary_period(state, period, date_from, date_to):
 
     state.summary_date_error = ""
     update_summary(state, period, date_from, date_to)
+    # Очередь читает даты из state.summary_dates, поэтому после их записи
+    update_queue(state)
 
 
 def on_apply_summary_range(state):
@@ -205,9 +207,15 @@ def load_incident(state, entity_id):
 
 
 def update_queue(state):
+    date_from, date_to = (
+        tgb_date_range_to_date(value) for value in state.summary_dates
+    )
+
     queue = get_incident_service().get_queue(
         state.search,
         state.severity,
+        date_from,
+        date_to,
     )
 
     state.queue_df = queue
@@ -231,8 +239,7 @@ def on_init(state):
         visible_range=None,
     )
 
-    update_queue(state)
-
+    # Очередь обновится внутри apply_summary_period вместе со сводкой
     apply_summary_period(
         state, state.summary_period, *preset_period_to_date_range(state.summary_period)
     )

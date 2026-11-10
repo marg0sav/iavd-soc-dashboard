@@ -1,3 +1,5 @@
+from datetime import date
+
 import pandas as pd
 
 from soc_dashboard.constants import ALL, CARD_COLUMNS, CARD_FIELD, CARD_VALUE
@@ -46,7 +48,10 @@ class IncidentService:
         self,
         search: str = "",
         severity: str = ALL,
+        date_from: date | None = None,
+        date_to: date | None = None,
     ) -> pd.DataFrame:
+        """Очередь инцидентов. Период фильтруется, только если заданы обе даты."""
         df = self.repository.get_all()
 
         for column in QUEUE_PASSTHROUGH_COLUMNS:
@@ -55,6 +60,12 @@ class IncidentService:
 
         if Col.CREATED not in df.columns:
             df[Col.CREATED] = pd.NaT
+
+        if date_from is not None and date_to is not None:
+            start = pd.Timestamp(date_from, tz="UTC")
+            # Последний выбранный день включается целиком
+            end = pd.Timestamp(date_to, tz="UTC") + pd.Timedelta(days=1)
+            df = df[(df[Col.CREATED] >= start) & (df[Col.CREATED] < end)].copy()
 
         df["_priority"] = (
             parse_severity(df[Col.SEVERITY])
