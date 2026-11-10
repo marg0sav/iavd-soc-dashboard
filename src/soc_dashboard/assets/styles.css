@@ -216,3 +216,6 @@ body {
 }
 
 .soc-analytics .taipy-chart { display: block; margin: 0; }
+/* Страница ML */
+.soc-ml-list { grid-column: span 4; }
+.soc-ml-list ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }

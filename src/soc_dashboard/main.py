@@ -1,6 +1,7 @@
 from taipy.gui import Gui
 
 from soc_dashboard.pages.dashboard import dashboard
+from soc_dashboard.pages.ml import ml
 from soc_dashboard.pages.root import root_page
 
 # После "/" (root_page) Taipy показывает страницу после нее [1]
@@ -8,6 +9,7 @@ from soc_dashboard.pages.root import root_page
 pages = {
     "/": root_page,
     "dashboard": dashboard.dashboard_page,
+    "ml": ml.ml_page,
 }
 
 
