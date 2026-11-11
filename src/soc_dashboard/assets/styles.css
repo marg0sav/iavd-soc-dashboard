@@ -117,7 +117,7 @@ body {
 }
 
 /* Цвет критической критичности из SEVERITY_COLORS (domain/severity.py) */
-.metric-critical .metric-value { color: #B54863; }
+.metric-critical .metric-value { color: #B30000; }
 
 .soc-panels {
     --plot-height: min(500px, calc(100dvh - 338px));
