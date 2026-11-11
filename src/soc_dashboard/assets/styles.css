@@ -65,10 +65,10 @@ body {
 }
 
 .soc-metric {
-    --metric-height: 96px;
-    --metric-label-size: 12px;
-    --metric-value-size: 24px;
-    --metric-note-size: 11px;
+    --metric-height: 108px;
+    --metric-label-size: 13px;
+    --metric-value-size: clamp(24px, 1.8vw, 32px);
+    --metric-note-size: 12px;
     --metric-muted-color: #625c5a;
 
     display: flex;
@@ -76,11 +76,10 @@ body {
     align-items: stretch;
     justify-content: flex-start;
 
-    height: var(--metric-height);
-    min-height: 0;
+    min-height: var(--metric-height);
     min-width: 0;
-    padding: 6px 10px;
-    gap: 2px;
+    padding: 8px 12px;
+    gap: 4px;
 }
 
 .soc-metric > div {
