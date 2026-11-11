@@ -116,6 +116,7 @@ body {
     color: var(--metric-muted-color);
 }
 
+/* Цвет критической критичности из SEVERITY_COLORS (domain/severity.py) */
 .metric-critical .metric-value { color: #B54863; }
 
 .soc-panels {

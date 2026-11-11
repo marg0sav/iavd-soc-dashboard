@@ -8,20 +8,12 @@ import plotly.graph_objects as go
 from soc_dashboard.constants import NO_DATA
 from soc_dashboard.domain.columns import Col
 from soc_dashboard.domain.period import Period
-from soc_dashboard.domain.severity import Severity, parse_severity
-
-# Уровень для пустой или нераспознанной критичности
-UNSPECIFIED = "Не указана"
-
-# Порядок задаёт порядок слоёв в столбце и в легенде
-COLORS = {
-    UNSPECIFIED: "#F2EFED",
-    Severity.INFORMATIONAL.label: "#E8E4E1",
-    Severity.LOW.label: "#DDD8D5",
-    Severity.MEDIUM.label: "#8D8683",
-    Severity.HIGH.label: "#B8B1AE",
-    Severity.CRITICAL.label: "#B54863",
-}
+from soc_dashboard.domain.severity import (
+    SEVERITY_COLORS,
+    UNSPECIFIED,
+    Severity,
+    parse_severity,
+)
 
 
 def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -118,7 +110,7 @@ def _prepare_grouped(df, start, end, freq):
         data.groupby(["Время", "Уровень"])
         .size()
         .unstack(fill_value=0)
-        .reindex(columns=list(COLORS), fill_value=0)
+        .reindex(columns=list(SEVERITY_COLORS), fill_value=0)
         .reindex(timeline, fill_value=0)
     )
 
@@ -222,7 +214,7 @@ def build_incident_chart(
 
     centers = [ts + (_next_bucket_start(ts, freq) - ts) / 2 for ts in grouped["Время"]]
 
-    for level, color in COLORS.items():
+    for level, color in SEVERITY_COLORS.items():
         fig.add_bar(
             x=centers,
             y=grouped[level],
@@ -260,7 +252,7 @@ def build_incident_chart(
             "gridcolor": "#E8ECF0",
             "zeroline": False,
             "tickformat": "d",
-            "dtick": 1 if grouped[list(COLORS)].sum(axis=1).max() <= 10 else None,
+            "dtick": 1 if grouped[list(SEVERITY_COLORS)].sum(axis=1).max() <= 10 else None,
             "nticks": 8,
             "fixedrange": True,
         },
