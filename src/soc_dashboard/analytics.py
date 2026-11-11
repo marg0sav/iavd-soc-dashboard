@@ -252,7 +252,9 @@ def build_incident_chart(
             "gridcolor": "#E8ECF0",
             "zeroline": False,
             "tickformat": "d",
-            "dtick": 1 if grouped[list(SEVERITY_COLORS)].sum(axis=1).max() <= 10 else None,
+            "dtick": 1
+            if grouped[list(SEVERITY_COLORS)].sum(axis=1).max() <= 10
+            else None,
             "nticks": 8,
             "fixedrange": True,
         },
