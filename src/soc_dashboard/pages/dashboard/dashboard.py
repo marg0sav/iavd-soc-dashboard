@@ -324,6 +324,7 @@ with tgb.Page() as dashboard_page:
                 tgb.text(
                     "{summary_take_note}",
                     class_name="metric-note",
+                    hover_text="Карточки без даты взятия в работу или без вердитка - не учитываются",
                 )
 
         with tgb.part(class_name="soc-panels"):
