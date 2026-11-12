@@ -30,5 +30,10 @@ def get_ml_model_metadata() -> MLModelMetadata | None:
     if not PATH_TO_ML_MODEL_METADATA.exists():
         return None
 
-    with open(PATH_TO_ML_MODEL_METADATA, encoding="utf-8") as json_file:
-        return MLModelMetadata.from_dict(json.load(json_file))
+    try:    
+        with open(PATH_TO_ML_MODEL_METADATA, encoding="utf-8") as json_file:
+            return MLModelMetadata.from_dict(json.load(json_file))
+    except Exception as ex:
+        # TODO: logger?
+        return None
+
