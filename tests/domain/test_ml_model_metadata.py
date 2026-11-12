@@ -1,6 +1,7 @@
 import json
 
 from soc_dashboard.domain.ml_model_metadata import (
+    MLModelConfusionMatrix,
     MLModelMetadata,
     MLModelMetrics,
     MLModelTrainingData,
@@ -26,6 +27,12 @@ METADATA_JSON = """
     "precision": 0.5988,
     "recall": 0.6683,
     "f1": 0.6316
+  },
+  "confusion_matrix": {
+    "tn": 22114,
+    "fp": 2088,
+    "fn": 1376,
+    "tp": 2971
   }
 }
 """
@@ -47,4 +54,5 @@ def test_reads_metadata_json():
             recall=0.6683,
             f1=0.6316,
         ),
+        confusion_matrix=MLModelConfusionMatrix(tn=22114, fp=2088, fn=1376, tp=2971),
     )

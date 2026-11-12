@@ -219,4 +219,6 @@ body {
 .soc-analytics .taipy-chart { display: block; margin: 0; }
 /* Страница ML */
 .soc-ml-list { grid-column: span 4; }
+/* Справа от метаданных: 4 + 2 колонки сетки soc-metrics */
+.soc-ml-confusion { grid-column: span 2; }
 .soc-ml-list ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }

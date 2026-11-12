@@ -18,6 +18,7 @@ METADATA = {
         "recall": 0.6683,
         "f1": 0.6316,
     },
+    "confusion_matrix": {"tn": 22114, "fp": 2088, "fn": 1376, "tp": 2971},
 }
 
 
