@@ -30,10 +30,10 @@ def get_ml_model_metadata() -> MLModelMetadata | None:
     if not PATH_TO_ML_MODEL_METADATA.exists():
         return None
 
-    try:    
+    try:
         with open(PATH_TO_ML_MODEL_METADATA, encoding="utf-8") as json_file:
             return MLModelMetadata.from_dict(json.load(json_file))
-    except Exception as ex:
+    except Exception: # noqa: BLE001
+        # NOTE: Сейчас считаем что нам норм с noqa BLE001.
         # TODO: logger?
         return None
-

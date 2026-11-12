@@ -616,7 +616,7 @@ def build_confusion_matrix_figure(cm: MLModelConfusionMatrix) -> go.Figure:
     labels = ["Решён", "False Positive"]
     counts = [[cm.tp, cm.fn], [cm.fp, cm.tn]]
     shares = [[value / max(sum(row), 1) for value in row] for row in counts]
-    
+
     # 22114 -> 22 114
     texts = [[f"{value:,}".replace(",", " ") for value in row] for row in counts]
 
@@ -645,6 +645,10 @@ def build_confusion_matrix_figure(cm: MLModelConfusionMatrix) -> go.Figure:
         plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Arial, sans-serif", "size": 12, "color": "#625c5a"},
         xaxis={"title": {"text": "Прогноз модели"}, "side": "top", "fixedrange": True},
-        yaxis={"title": {"text": "Реальное значение"}, "autorange": "reversed", "fixedrange": True},
+        yaxis={
+            "title": {"text": "Реальное значение"},
+            "autorange": "reversed",
+            "fixedrange": True,
+        },
     )
     return fig
