@@ -2,11 +2,21 @@ from datetime import datetime
 
 import taipy.gui.builder as tgb
 
+from soc_dashboard.analytics import build_confusion_matrix_figure
 from soc_dashboard.data.data import get_ml_model_metadata
 
 # Метаданные статичны и читаются один раз при запуске,
 # поэтому страница строится из готовых значений, без переменных состояния
 ml_model_metadata = get_ml_model_metadata()
+
+# Если метаданные не получилось считать, то не строим Confusion matrix
+confusion_figure = (
+    None
+    if ml_model_metadata is None
+    else build_confusion_matrix_figure(ml_model_metadata.confusion_matrix)
+)
+# Выключаем plotly инстурменты.
+confusion_chart_config = {"displayModeBar": False, "responsive": True}
 
 with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
     with tgb.part(class_name="soc-toolbar"):
@@ -44,4 +54,19 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
                     f"- **Датасет:** {ml_model_metadata.data.file}\n"
                     f"- **Порог:** {ml_model_metadata.threshold}",
                     mode="md",
+                )
+
+            with tgb.part(class_name="soc-panel soc-ml-confusion"):
+                with tgb.part(class_name="soc-toolbar"):
+                    tgb.text("## Матрица ошибок:", mode="md")
+
+                tgb.chart(
+                    figure="{confusion_figure}",
+                    width="100%",
+                    height="260px",
+                    plot_config="{confusion_chart_config}",
+                )
+                tgb.text(
+                    f"(Тестовая выборка, порог={ml_model_metadata.threshold})",
+                    class_name="soc-panel-note",
                 )

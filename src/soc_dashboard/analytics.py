@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 
 from soc_dashboard.constants import NO_DATA
 from soc_dashboard.domain.columns import Col
+from soc_dashboard.domain.ml_model_metadata import MLModelConfusionMatrix
 from soc_dashboard.domain.period import Period
 from soc_dashboard.domain.severity import (
     SEVERITY_COLORS,
@@ -609,3 +610,41 @@ def build_dashboard_overview(
             total,
         ),
     }
+
+
+def build_confusion_matrix_figure(cm: MLModelConfusionMatrix) -> go.Figure:
+    labels = ["Решён", "False Positive"]
+    counts = [[cm.tp, cm.fn], [cm.fp, cm.tn]]
+    shares = [[value / max(sum(row), 1) for value in row] for row in counts]
+    
+    # 22114 -> 22 114
+    texts = [[f"{value:,}".replace(",", " ") for value in row] for row in counts]
+
+    fig = go.Figure(
+        go.Heatmap(
+            z=shares,
+            x=labels,
+            y=labels,
+            text=texts,
+            zmin=0,
+            zmax=1,
+            colorscale="Blues",
+            showscale=False,
+            texttemplate="%{text}<br>%{z:.0%}",
+            textfont={"size": 14},
+            hovertemplate=(
+                "Факт: %{y}<br>Прогноз: %{x}<br>"
+                "Инцидентов: %{text}<br>Доля от факта: %{z:.1%}<extra></extra>"
+            ),
+        )
+    )
+    fig.update_layout(
+        autosize=True,
+        margin={"l": 8, "r": 8, "t": 8, "b": 8},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"family": "Arial, sans-serif", "size": 12, "color": "#625c5a"},
+        xaxis={"title": {"text": "Прогноз модели"}, "side": "top", "fixedrange": True},
+        yaxis={"title": {"text": "Реальное значение"}, "autorange": "reversed", "fixedrange": True},
+    )
+    return fig
