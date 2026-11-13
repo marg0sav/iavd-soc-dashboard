@@ -3,9 +3,9 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-class CatBoostModel:
+class SocCatBoostModel:
     def __init__(self, artifact_dir: Path):
-        
+
         directory = artifact_dir
         metadata = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
         self._model = joblib.load(directory / "model.joblib")
