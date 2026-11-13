@@ -10,4 +10,6 @@ def test_inference():
     service = SocModelInferenceService(StubModel())
     result = service.predict("123", pd.DataFrame())
 
+    assert result.incident_id == "123"
     assert result.verdict == "Решён"
+    assert result.probability == 0.85
