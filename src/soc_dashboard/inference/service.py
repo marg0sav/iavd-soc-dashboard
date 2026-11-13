@@ -1,9 +1,9 @@
 import pandas as pd
 from soc_dashboard.model.catboost_model import SocCatBoostModel
-from soc_dashboard.inference.inference_service import InferenceService
+from soc_dashboard.inference.inference_service import SocInferenceService
 from soc_dashboard.inference.result import SocModelInferenceResult
 
-class SocModelInferenceService(InferenceService):
+class SocModelInferenceService(SocInferenceService):
     def __init__(self, model: SocCatBoostModel):
         self._model = model
 
