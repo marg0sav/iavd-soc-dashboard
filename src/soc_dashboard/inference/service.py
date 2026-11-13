@@ -1,7 +1,9 @@
 import pandas as pd
-from soc_dashboard.model.catboost_model import SocCatBoostModel
+
 from soc_dashboard.inference.inference_service import SocInferenceService
 from soc_dashboard.inference.result import SocModelInferenceResult
+from soc_dashboard.model.catboost_model import SocCatBoostModel
+
 
 class SocModelInferenceService(SocInferenceService):
     def __init__(self, model: SocCatBoostModel):
@@ -15,10 +17,8 @@ class SocModelInferenceService(SocInferenceService):
 
         probability = self._model.predict_positive_probability(features)
 
-        verdict = (
-            "Решён" if probability >= self._model.threshold
-            else "False Positive"
-        )
+        verdict = "Решён" if probability >= self._model.threshold else "False Positive"
 
-        return SocModelInferenceResult(incident_id=incident_id, verdict=verdict,
-                               probability=probability)
+        return SocModelInferenceResult(
+            incident_id=incident_id, verdict=verdict, probability=probability
+        )

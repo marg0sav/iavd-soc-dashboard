@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
+
 import joblib
 import pandas as pd
+
 
 class SocCatBoostModel:
     def __init__(self, artifact_dir: Path):
@@ -12,8 +14,7 @@ class SocCatBoostModel:
         self._feature_names = list(self._model.feature_names_)
 
         self._categorical_features = [
-            self._feature_names[i]
-            for i in self._model.get_cat_feature_indices()
+            self._feature_names[i] for i in self._model.get_cat_feature_indices()
         ]
 
         classes = list(self._model.classes_)
