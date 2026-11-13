@@ -4,9 +4,9 @@ import joblib
 import pandas as pd
 
 class CatBoostModel:
-    def __init__(self, artifact_dir: str | Path = "ml_models/verdict"):
+    def __init__(self, artifact_dir: Path):
         
-        directory = Path(artifact_dir)
+        directory = artifact_dir
         metadata = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
         self._model = joblib.load(directory / "model.joblib")
         self._feature_names = list(self._model.feature_names_)
