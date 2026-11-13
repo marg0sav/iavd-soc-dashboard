@@ -20,7 +20,7 @@ def artifact_dir(tmp_path):
     model = CatBoostClassifier(
         iterations=5, verbose=False, cat_features=["Критичность"]
     )
-    
+
     model.fit(
         features, [1, 0, 1, 0]
     )  # 1 - "Решен" (Реальный инцидент), 0 "False Positive" (ложный инцидент)
