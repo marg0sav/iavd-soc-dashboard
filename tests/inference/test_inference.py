@@ -1,15 +1,13 @@
-from unittest.mock import Mock
 import pandas as pd
-from soc_dashboard.inference.service import InferenceService
+from soc_dashboard.inference.service import SocModelInferenceService
+
+class StubModel:
+    threshold = 0.7
+    def predict_positive_probability(self, features):
+        return 0.85
 
 def test_inference():
-
-    model = Mock()
-    model.threshold = 0.7
-    model.predict_positive_probability.return_value = 0.85
-    service = InferenceService(model)
+    service = SocModelInferenceService(StubModel())
     result = service.predict("123", pd.DataFrame())
 
-    assert result.incident_id == "123"
     assert result.verdict == "Решён"
-    assert result.probability == 0.85

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
-class InferenceResult:
+class SocModelInferenceResult:
     incident_id: str
     verdict: str
     probability: float
