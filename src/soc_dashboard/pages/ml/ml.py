@@ -3,8 +3,14 @@ from datetime import datetime
 import taipy.gui.builder as tgb
 
 from soc_dashboard.analytics import build_confusion_matrix_figure
-from soc_dashboard.data.data import get_ml_model_metadata, get_pure_test_predictions
+from soc_dashboard.data.data import (
+    get_ml_model_metadata,
+    get_pure_test_predictions,
+    get_pure_test_service,
+)
+from soc_dashboard.domain.columns import Col
 from soc_dashboard.inference.evaluation import PredictionCol, PredictionResult
+from soc_dashboard.service import empty_card
 
 # Метаданные статичны и читаются один раз при запуске,
 # поэтому страница строится из готовых значений, без переменных состояния
@@ -31,6 +37,30 @@ PREDICTION_ROW_CLASSES = {
 
 def prediction_row_class(state, index, row):
     return PREDICTION_ROW_CLASSES.get(row[PredictionCol.RESULT], "")
+
+
+# Карточка инцидента по клику на строку: так же, как в очереди дашборда
+card_df = empty_card()
+card_open = False
+selected_title = "Выберите инцидент"
+
+
+def load_incident(state, entity_id):
+    state.card_df = get_pure_test_service().get_card(entity_id)
+    state.selected_title = f"Инцидент {entity_id}"
+
+
+def on_row_selected(state, var_name, payload):
+    index = payload.get("index")
+
+    if index in state.pure_test_df.index:
+        entity_id = state.pure_test_df.loc[index, Col.ID]
+        load_incident(state, entity_id)
+        state.card_open = True
+
+
+def close_card(state):
+    state.card_open = False
 
 
 with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
@@ -102,6 +132,17 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
                     width="100%",
                     height="520px",
                     date_format="dd.MM.yyyy HH:mm",
+                    on_action=on_row_selected,
                     row_class_name=prediction_row_class,
                     class_name="soc-ml-predictions",
                 )
+
+    with tgb.dialog(
+        "{card_open}",
+        title="Карточка инцидента",
+        width="850px",
+        labels=["Закрыть"],
+        on_action=close_card,
+    ):
+        tgb.text("{selected_title}")
+        tgb.table("{card_df}", editable=False, page_size=20, width="100%")
