@@ -1,9 +1,11 @@
 from datetime import datetime
 
+import plotly.graph_objects as go
 import taipy.gui.builder as tgb
 
-from soc_dashboard.analytics import build_confusion_matrix_figure
+from soc_dashboard.analytics import build_confusion_matrix_figure, build_shap_figure
 from soc_dashboard.data.data import (
+    get_incident_shap_values,
     get_ml_model_metadata,
     get_pure_test_data_service,
     get_pure_test_predictions,
@@ -43,12 +45,14 @@ def prediction_row_class(state, index, row):
 card_df = empty_card()
 card_open = False
 selected_title = "Выберите инцидент"
-
+shap_figure = go.Figure()
 
 def load_incident(state, entity_id):
     state.card_df = get_pure_test_data_service().get_card(entity_id)
     state.selected_title = f"Инцидент {entity_id}"
 
+    shap_df = get_incident_shap_values(entity_id)
+    state.shap_figure = build_shap_figure(shap_df)
 
 def on_row_selected(state, var_name, payload):
     index = payload.get("index")
@@ -146,3 +150,15 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
     ):
         tgb.text("{selected_title}")
         tgb.table("{card_df}", editable=False, page_size=20, width="100%")
+
+        tgb.text("Влияние признаков на прогноз", mode="md")
+        tgb.chart(
+            figure="{shap_figure}",
+            width="100%",
+            height="400px",
+            plot_config="{confusion_chart_config}",
+        )
+
+        tgb.text(
+        "Красным показаны признаки повышающие вероятность вердикта «Решён», "
+        "синим показаны признаки снижающие её")
