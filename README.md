@@ -27,3 +27,8 @@ poetry run soc-dashboard --use-reloader --debug --no-run-browser
  - [color-brewer2](https://colorbrewer2.org/) (Помощь с палитрой цветов)
  - [dashboard-design-patterns](https://dashboarddesignpatterns.github.io/patterns.html) (Паттерны построения дашбордов)
  - [storytelling-with-data](https://www.storytellingwithdata.com/) (Как правильно презентовать отчеты)
+
+
+ ## To develop:
+
+ Using [taipy documentation](https://docs.taipy.io/en/latest/refmans/gui/viselements/) instead of dircetly-LLM requests.
