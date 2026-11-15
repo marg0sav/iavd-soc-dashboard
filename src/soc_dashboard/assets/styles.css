@@ -222,3 +222,6 @@ body {
 /* Справа от метаданных: 4 + 2 колонки сетки soc-metrics */
 .soc-ml-confusion { grid-column: span 2; }
 .soc-ml-list ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
+/* Если модель допустила пропуск или ошиблась - выделяем цветом */
+.soc-ml-predictions tr.prediction-missed td { background: #fde0dd; }
+.soc-ml-predictions tr.prediction-false td { background: #fff7e6; }

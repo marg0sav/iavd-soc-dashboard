@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 
 
@@ -34,4 +35,11 @@ class SocCatBoostModel:
         return self._threshold
 
     def predict_positive_probability(self, features: pd.DataFrame) -> float:
-        return float(self._model.predict_proba(features)[0, self._positive_index])
+        return float(self.predict_positive_probabilities(features)[0])
+
+    def predict_positive_probabilities(self, features: pd.DataFrame) -> np.ndarray:
+        """Вероятность класса "Решён" для каждой строки features."""
+        # Лишние столбцы отбрасываем, порядок - как при обучении
+        return self._model.predict_proba(features[self._feature_names])[
+            :, self._positive_index
+        ]

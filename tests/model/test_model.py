@@ -46,3 +46,15 @@ def test_predict_positive_probability(artifact_dir):
     features = pd.DataFrame({"Критичность": ["Высокая"], "hour": [1]})
 
     assert 0 <= model.predict_positive_probability(features) <= 1
+
+
+def test_predict_positive_probabilities(artifact_dir):
+    model = SocCatBoostModel(artifact_dir)
+    features = pd.DataFrame(
+        {"hour": [1, 2], "Критичность": ["Высокая", "Низкая"]}
+    )
+
+    probabilities = model.predict_positive_probabilities(features)
+
+    assert probabilities.shape == (2,)
+    assert ((0 <= probabilities) & (probabilities <= 1)).all()
