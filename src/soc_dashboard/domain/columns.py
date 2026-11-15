@@ -9,6 +9,7 @@ class Col:
     SLA_TAKE_OVERDUE = "SLA просрочен (взятие в работу)"
     INCIDENT_TYPE = "Тип инцидента"
     SEVERITY = "Критичность"
+    NAME = "Наименование"
     VERDICT = "Вердикт"
     ASSIGNEE = "Ответственный"
 

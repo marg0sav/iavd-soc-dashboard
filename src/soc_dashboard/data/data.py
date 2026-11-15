@@ -2,7 +2,11 @@ import json
 from functools import cache
 from pathlib import Path
 
+import pandas as pd
+
 from soc_dashboard.domain.ml_model_metadata import MLModelMetadata
+from soc_dashboard.inference.evaluation import build_prediction_table
+from soc_dashboard.model.catboost_model import SocCatBoostModel
 from soc_dashboard.repository import IncidentRepository
 from soc_dashboard.service import IncidentService
 
@@ -10,8 +14,14 @@ PATH_TO_DATA = (
     Path(__file__).resolve().parents[3] / "data" / "new_incidents_soc_1000.parquet"
 )
 
-PATH_TO_ML_MODEL_METADATA = (
-    Path(__file__).resolve().parents[3] / "ml_models" / "verdict" / "metadata.json"
+PATH_TO_MODEL_DIRECTORY = Path(__file__).resolve().parents[3] / "ml_models" / "verdict"
+
+PATH_TO_ML_MODEL_METADATA = PATH_TO_MODEL_DIRECTORY / "metadata.json"
+
+PATH_TO_ML_MODEL_JOBLIB = PATH_TO_MODEL_DIRECTORY / "model.joblib"
+
+PATH_TO_PURE_TEST_DATA = (
+    Path(__file__).resolve().parents[3] / "data" / "pure_test.parquet"
 )
 
 
@@ -37,3 +47,34 @@ def get_ml_model_metadata() -> MLModelMetadata | None:
         # NOTE: Сейчас считаем что нам норм с noqa BLE001.
         # TODO: logger?
         return None
+
+
+@cache
+def get_pure_test_data_service() -> IncidentService | None:
+    if not PATH_TO_PURE_TEST_DATA.is_file():
+        return None
+
+    return IncidentService(IncidentRepository(PATH_TO_PURE_TEST_DATA))
+
+
+@cache
+def get_pure_test_predictions() -> pd.DataFrame | None:
+    """Прогнозы модели на pure_test, None - если нет модели или выборки."""
+    if (
+        not (PATH_TO_ML_MODEL_JOBLIB).is_file()
+        or not (PATH_TO_ML_MODEL_JOBLIB).exists()
+    ):
+        return None
+
+    pure_test_data_service = get_pure_test_data_service()
+    if pure_test_data_service is None:
+        return None
+
+    model = SocCatBoostModel(PATH_TO_MODEL_DIRECTORY)
+    incidents = pure_test_data_service.repository.get_all()
+
+    return build_prediction_table(
+        incidents,
+        model.predict_positive_probabilities(incidents),
+        model.threshold,
+    )
