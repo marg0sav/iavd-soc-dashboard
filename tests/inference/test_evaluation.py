@@ -22,11 +22,13 @@ def test_compares_prediction_with_analyst_verdict():
         }
     )
     PROBABILITIES = np.array([0.9, 0.2, 0.8, 0.1])
-    
+
     table = build_prediction_table(INCIDENTS, PROBABILITIES, threshold=0.7)
     assert len(table) == len(INCIDENTS)
-    
-    predictions_status = dict(zip(table[Col.ID], table[PredictionCol.RESULT], strict=True))
+
+    predictions_status = dict(
+        zip(table[Col.ID], table[PredictionCol.RESULT], strict=True)
+    )
     assert predictions_status == {
         1: PredictionResult.MATCH,
         2: PredictionResult.MISSED,

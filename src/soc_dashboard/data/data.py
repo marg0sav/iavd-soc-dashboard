@@ -14,17 +14,11 @@ PATH_TO_DATA = (
     Path(__file__).resolve().parents[3] / "data" / "new_incidents_soc_1000.parquet"
 )
 
-PATH_TO_MODEL_DIRECTORY = (
-    Path(__file__).resolve().parents[3] / "ml_models" / "verdict"
-)
+PATH_TO_MODEL_DIRECTORY = Path(__file__).resolve().parents[3] / "ml_models" / "verdict"
 
-PATH_TO_ML_MODEL_METADATA = (
-    PATH_TO_MODEL_DIRECTORY / "metadata.json"
-)
+PATH_TO_ML_MODEL_METADATA = PATH_TO_MODEL_DIRECTORY / "metadata.json"
 
-PATH_TO_ML_MODEL_JOBLIB = (
-    PATH_TO_MODEL_DIRECTORY / "model.joblib"
-)
+PATH_TO_ML_MODEL_JOBLIB = PATH_TO_MODEL_DIRECTORY / "model.joblib"
 
 PATH_TO_PURE_TEST_DATA = (
     Path(__file__).resolve().parents[3] / "data" / "pure_test.parquet"
@@ -66,7 +60,10 @@ def get_pure_test_data_service() -> IncidentService | None:
 @cache
 def get_pure_test_predictions() -> pd.DataFrame | None:
     """Прогнозы модели на pure_test, None - если нет модели или выборки."""
-    if not (PATH_TO_ML_MODEL_JOBLIB).is_file() or not (PATH_TO_ML_MODEL_JOBLIB).exists():
+    if (
+        not (PATH_TO_ML_MODEL_JOBLIB).is_file()
+        or not (PATH_TO_ML_MODEL_JOBLIB).exists()
+    ):
         return None
 
     pure_test_data_service = get_pure_test_data_service()

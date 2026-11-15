@@ -50,9 +50,7 @@ def test_predict_positive_probability(artifact_dir):
 
 def test_predict_positive_probabilities(artifact_dir):
     model = SocCatBoostModel(artifact_dir)
-    features = pd.DataFrame(
-        {"hour": [1, 2], "Критичность": ["Высокая", "Низкая"]}
-    )
+    features = pd.DataFrame({"hour": [1, 2], "Критичность": ["Высокая", "Низкая"]})
 
     probabilities = model.predict_positive_probabilities(features)
 

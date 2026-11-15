@@ -5,8 +5,8 @@ import taipy.gui.builder as tgb
 from soc_dashboard.analytics import build_confusion_matrix_figure
 from soc_dashboard.data.data import (
     get_ml_model_metadata,
-    get_pure_test_predictions,
     get_pure_test_data_service,
+    get_pure_test_predictions,
 )
 from soc_dashboard.domain.columns import Col
 from soc_dashboard.inference.evaluation import PredictionCol, PredictionResult

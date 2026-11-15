@@ -11,7 +11,7 @@ VERDICT_FALSE_POSITIVE = "False Positive"
 class PredictionCol:
     """Столбцы таблицы прогнозов, которых нет в исходном датасете."""
 
-    PROBABILITY = "Вероятность(\"Решен\"), %"
+    PROBABILITY = 'Вероятность("Решен"), %'
     PREDICTED = "Прогноз модели"
     ACTUAL = "Вердикт аналитика"
     RESULT = "Результат"
