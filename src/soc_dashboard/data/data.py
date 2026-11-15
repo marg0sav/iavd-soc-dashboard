@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from soc_dashboard.domain.columns import Col
 from soc_dashboard.domain.ml_model_metadata import MLModelMetadata
 from soc_dashboard.inference.evaluation import build_prediction_table
 from soc_dashboard.model.catboost_model import SocCatBoostModel
@@ -58,6 +59,17 @@ def get_pure_test_data_service() -> IncidentService | None:
 
 
 @cache
+def get_ml_model() -> SocCatBoostModel | None:
+    if not PATH_TO_ML_MODEL_JOBLIB.is_file():
+        return None
+
+    if not PATH_TO_ML_MODEL_METADATA.is_file():
+        return None
+
+    return SocCatBoostModel(PATH_TO_MODEL_DIRECTORY)
+
+
+@cache
 def get_pure_test_predictions() -> pd.DataFrame | None:
     """Прогнозы модели на pure_test, None - если нет модели или выборки."""
     if (
@@ -70,7 +82,8 @@ def get_pure_test_predictions() -> pd.DataFrame | None:
     if pure_test_data_service is None:
         return None
 
-    model = SocCatBoostModel(PATH_TO_MODEL_DIRECTORY)
+    model = get_ml_model()
+    if model is None: return None
     incidents = pure_test_data_service.repository.get_all()
 
     return build_prediction_table(
@@ -78,3 +91,18 @@ def get_pure_test_predictions() -> pd.DataFrame | None:
         model.predict_positive_probabilities(incidents),
         model.threshold,
     )
+
+def get_incident_shap_values(entity_id: str) -> pd.DataFrame:
+    model = get_ml_model()
+    service = get_pure_test_data_service()
+
+    if model is None or service is None:
+        return pd.DataFrame(columns=["feature", "shap_value"])
+
+    incidents = service.repository.get_all()
+    features = incidents.loc[incidents[Col.ID] == entity_id]
+
+    if features.empty:
+        return pd.DataFrame(columns=["feature", "shap_value"])
+
+    return model.get_shap_values(features)
