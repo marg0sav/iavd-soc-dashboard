@@ -56,16 +56,25 @@ def get_ml_model_metadata() -> MLModelMetadata | None:
 
 
 @cache
+def get_pure_test_data_service() -> IncidentService | None:
+    if not PATH_TO_PURE_TEST_DATA.is_file():
+        return None
+
+    return IncidentService(IncidentRepository(PATH_TO_PURE_TEST_DATA))
+
+
+@cache
 def get_pure_test_predictions() -> pd.DataFrame | None:
     """Прогнозы модели на pure_test, None - если нет модели или выборки."""
     if not (PATH_TO_ML_MODEL_JOBLIB).is_file() or not (PATH_TO_ML_MODEL_JOBLIB).exists():
         return None
 
-    if not PATH_TO_PURE_TEST_DATA.is_file():
+    pure_test_data_service = get_pure_test_data_service()
+    if pure_test_data_service is None:
         return None
 
     model = SocCatBoostModel(PATH_TO_MODEL_DIRECTORY)
-    incidents = pd.read_parquet(PATH_TO_PURE_TEST_DATA)
+    incidents = pure_test_data_service.repository.get_all()
 
     return build_prediction_table(
         incidents,
