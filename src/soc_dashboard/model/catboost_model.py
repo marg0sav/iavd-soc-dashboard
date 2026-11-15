@@ -4,6 +4,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from catboost import Pool
 
 
 class SocCatBoostModel:
@@ -43,3 +44,14 @@ class SocCatBoostModel:
         return self._model.predict_proba(features[self._feature_names])[
             :, self._positive_index
         ]
+
+    def get_shap_values(self, features: pd.DataFrame) -> pd.DataFrame:
+
+        pool = Pool(features[self._feature_names], cat_features=self._categorical_features)
+        val = self._model.get_feature_importance(pool, type="ShapValues")[0]
+
+        return pd.DataFrame({
+            "feature": self._feature_names,
+            "shap_value": val[:-1]})
+
+    
