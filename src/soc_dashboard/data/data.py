@@ -14,12 +14,16 @@ PATH_TO_DATA = (
     Path(__file__).resolve().parents[3] / "data" / "new_incidents_soc_1000.parquet"
 )
 
+PATH_TO_MODEL_DIRECTORY = (
+    Path(__file__).resolve().parents[3] / "ml_models" / "verdict"
+)
+
 PATH_TO_ML_MODEL_METADATA = (
-    Path(__file__).resolve().parents[3] / "ml_models" / "verdict" / "metadata.json"
+    PATH_TO_MODEL_DIRECTORY / "metadata.json"
 )
 
 PATH_TO_ML_MODEL_JOBLIB = (
-    Path(__file__).resolve().parents[3] / "ml_models" / "verdict" / "model.joblib"
+    PATH_TO_MODEL_DIRECTORY / "model.joblib"
 )
 
 PATH_TO_PURE_TEST_DATA = (
@@ -60,7 +64,7 @@ def get_pure_test_predictions() -> pd.DataFrame | None:
     if not PATH_TO_PURE_TEST_DATA.is_file():
         return None
 
-    model = SocCatBoostModel(PATH_TO_ML_MODEL_JOBLIB)
+    model = SocCatBoostModel(PATH_TO_MODEL_DIRECTORY)
     incidents = pd.read_parquet(PATH_TO_PURE_TEST_DATA)
 
     return build_prediction_table(
