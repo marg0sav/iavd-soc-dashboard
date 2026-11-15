@@ -6,7 +6,7 @@ from soc_dashboard.analytics import build_confusion_matrix_figure
 from soc_dashboard.data.data import (
     get_ml_model_metadata,
     get_pure_test_predictions,
-    get_pure_test_service,
+    get_pure_test_data_service,
 )
 from soc_dashboard.domain.columns import Col
 from soc_dashboard.inference.evaluation import PredictionCol, PredictionResult
@@ -46,7 +46,7 @@ selected_title = "Выберите инцидент"
 
 
 def load_incident(state, entity_id):
-    state.card_df = get_pure_test_service().get_card(entity_id)
+    state.card_df = get_pure_test_data_service().get_card(entity_id)
     state.selected_title = f"Инцидент {entity_id}"
 
 
