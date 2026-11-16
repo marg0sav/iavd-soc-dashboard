@@ -58,7 +58,7 @@ def test_predict_positive_probabilities(artifact_dir):
     assert ((0 <= probabilities) & (probabilities <= 1)).all()
 
 
-def test_get_shap_values(artifact_dir):
+def test_smoke_get_shap_values(artifact_dir):
     model = SocCatBoostModel(artifact_dir)
     features = pd.DataFrame({"Критичность": ["Высокая"], "hour": [1]})
 
