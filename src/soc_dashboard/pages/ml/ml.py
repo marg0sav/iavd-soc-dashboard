@@ -157,7 +157,7 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
         tgb.text("{selected_title}")
         tgb.table("{card_df}", editable=False, page_size=20, width="100%")
 
-        tgb.text("Влияние признаков на прогноз", mode="md")
+        tgb.text("SHAP-values прогноза", mode="md")
         with tgb.part(render="{shap_available}"):
             tgb.chart(
                 figure="{shap_figure}",
