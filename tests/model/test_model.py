@@ -56,3 +56,14 @@ def test_predict_positive_probabilities(artifact_dir):
 
     assert probabilities.shape == (2,)
     assert ((0 <= probabilities) & (probabilities <= 1)).all()
+
+
+def test_smoke_get_shap_values(artifact_dir):
+    model = SocCatBoostModel(artifact_dir)
+    features = pd.DataFrame({"Критичность": ["Высокая"], "hour": [1]})
+
+    result = model.get_shap_values(features)
+
+    assert list(result.columns) == ["features", "shap_values"]
+    assert result["features"].tolist() == model.feature_names
+    assert result["shap_values"].notna().all()
