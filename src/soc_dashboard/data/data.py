@@ -72,18 +72,14 @@ def get_ml_model() -> SocCatBoostModel | None:
 @cache
 def get_pure_test_predictions() -> pd.DataFrame | None:
     """Прогнозы модели на pure_test, None - если нет модели или выборки."""
-    if (
-        not (PATH_TO_ML_MODEL_JOBLIB).is_file()
-        or not (PATH_TO_ML_MODEL_JOBLIB).exists()
-    ):
+    model = get_ml_model()
+    if model is None:
         return None
 
     pure_test_data_service = get_pure_test_data_service()
     if pure_test_data_service is None:
         return None
 
-    model = get_ml_model()
-    if model is None: return None
     incidents = pure_test_data_service.repository.get_all()
 
     return build_prediction_table(
