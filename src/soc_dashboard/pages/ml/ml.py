@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import plotly.graph_objects as go
 import taipy.gui.builder as tgb
 
 from soc_dashboard.analytics import build_confusion_matrix_figure, build_shap_figure
@@ -166,7 +165,7 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
                 plot_config="{confusion_chart_config}")
 
         with tgb.part(render="{not shap_available}"):
-            tgb.text("Данные не найдены")
+            tgb.text("Не получилось расчитать SHAP values")
 
         tgb.text(
         "Красным показаны признаки повышающие вероятность вердикта «Решён», "
