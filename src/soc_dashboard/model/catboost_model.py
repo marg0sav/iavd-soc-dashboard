@@ -47,11 +47,11 @@ class SocCatBoostModel:
 
     def get_shap_values(self, features: pd.DataFrame) -> pd.DataFrame:
 
-        pool = Pool(features[self._feature_names], cat_features=self._categorical_features)
+        pool = Pool(
+            features[self._feature_names], cat_features=self._categorical_features
+        )
         shap_value = self._model.get_feature_importance(pool, type="ShapValues")[0]
 
-        return pd.DataFrame({
-            "features": self._feature_names,
-            "shap_values": shap_value[:-1]})
-
-    
+        return pd.DataFrame(
+            {"features": self._feature_names, "shap_values": shap_value[:-1]}
+        )

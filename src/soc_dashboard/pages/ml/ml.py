@@ -47,17 +47,15 @@ selected_title = "Выберите инцидент"
 shap_figure = None
 shap_available = False
 
+
 def load_incident(state, entity_id):
     state.card_df = get_pure_test_data_service().get_card(entity_id)
     state.selected_title = f"Инцидент {entity_id}"
 
     shap_df = get_incident_shap_values(entity_id)
     state.shap_available = shap_df is not None
-    state.shap_figure = (
-        build_shap_figure(shap_df)
-        if state.shap_available
-        else None
-    )
+    state.shap_figure = build_shap_figure(shap_df) if state.shap_available else None
+
 
 def on_row_selected(state, var_name, payload):
     index = payload.get("index")
@@ -162,11 +160,13 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
                 figure="{shap_figure}",
                 width="100%",
                 height="400px",
-                plot_config="{confusion_chart_config}")
+                plot_config="{confusion_chart_config}",
+            )
 
         with tgb.part(render="{not shap_available}"):
             tgb.text("Не получилось расчитать SHAP values")
 
         tgb.text(
-        "Красным показаны признаки повышающие вероятность вердикта «Решён», "
-        "синим показаны признаки снижающие её")
+            "Красным показаны признаки повышающие вероятность вердикта «Решён», "
+            "синим показаны признаки снижающие её"
+        )

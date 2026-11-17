@@ -88,6 +88,7 @@ def get_pure_test_predictions() -> pd.DataFrame | None:
         model.threshold,
     )
 
+
 def get_incident_shap_values(entity_id: str) -> pd.DataFrame | None:
     ml_model = get_ml_model()
     pure_test_service = get_pure_test_data_service()
