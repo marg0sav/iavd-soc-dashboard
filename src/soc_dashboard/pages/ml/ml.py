@@ -45,14 +45,20 @@ def prediction_row_class(state, index, row):
 card_df = empty_card()
 card_open = False
 selected_title = "Выберите инцидент"
-shap_figure = go.Figure()
+shap_figure = None
+shap_available = False
 
 def load_incident(state, entity_id):
     state.card_df = get_pure_test_data_service().get_card(entity_id)
     state.selected_title = f"Инцидент {entity_id}"
 
     shap_df = get_incident_shap_values(entity_id)
-    state.shap_figure = (build_shap_figure(shap_df) if shap_df is not None else go.Figure())
+    state.shap_available = shap_df is not None
+    state.shap_figure = (
+        build_shap_figure(shap_df)
+        if state.shap_available
+        else None
+    )
 
 def on_row_selected(state, var_name, payload):
     index = payload.get("index")
@@ -152,12 +158,15 @@ with tgb.Page() as ml_page, tgb.part(class_name="soc-dashboard"):
         tgb.table("{card_df}", editable=False, page_size=20, width="100%")
 
         tgb.text("Влияние признаков на прогноз", mode="md")
-        tgb.chart(
-            figure="{shap_figure}",
-            width="100%",
-            height="400px",
-            plot_config="{confusion_chart_config}",
-        )
+        with tgb.part(render="{shap_available}"):
+            tgb.chart(
+                figure="{shap_figure}",
+                width="100%",
+                height="400px",
+                plot_config="{confusion_chart_config}")
+
+        with tgb.part(render="{not shap_available}"):
+            tgb.text("Данные не найдены")
 
         tgb.text(
         "Красным показаны признаки повышающие вероятность вердикта «Решён», "
