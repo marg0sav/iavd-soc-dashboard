@@ -52,7 +52,7 @@ def load_incident(state, entity_id):
     state.selected_title = f"Инцидент {entity_id}"
 
     shap_df = get_incident_shap_values(entity_id)
-    state.shap_figure = build_shap_figure(shap_df)
+    state.shap_figure = (build_shap_figure(shap_df) if shap_df is not None else go.Figure())
 
 def on_row_selected(state, var_name, payload):
     index = payload.get("index")

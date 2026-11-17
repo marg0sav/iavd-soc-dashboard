@@ -88,17 +88,17 @@ def get_pure_test_predictions() -> pd.DataFrame | None:
         model.threshold,
     )
 
-def get_incident_shap_values(entity_id: str) -> pd.DataFrame:
-    model = get_ml_model()
-    service = get_pure_test_data_service()
+def get_incident_shap_values(entity_id: str) -> pd.DataFrame | None:
+    ml_model = get_ml_model()
+    pure_test_service = get_pure_test_data_service()
 
-    if model is None or service is None:
-        return pd.DataFrame(columns=["features", "shap_values"])
+    if ml_model is None or pure_test_service is None:
+        return None
 
-    incidents = service.repository.get_all()
+    incidents = pure_test_service.repository.get_all()
     features = incidents.loc[incidents[Col.ID] == entity_id]
 
     if features.empty:
-        return pd.DataFrame(columns=["features", "shap_values"])
+        return None
 
-    return model.get_shap_values(features)
+    return ml_model.get_shap_values(features)
