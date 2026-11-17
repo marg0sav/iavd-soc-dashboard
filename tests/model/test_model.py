@@ -64,6 +64,6 @@ def test_smoke_get_shap_values(artifact_dir):
 
     result = model.get_shap_values(features)
 
-    assert list(result.columns) == ["feature", "shap_value"]
-    assert result["feature"].tolist() == model.feature_names
-    assert result["shap_value"].notna().all()
+    assert list(result.columns) == ["features", "shap_values"]
+    assert result["features"].tolist() == model.feature_names
+    assert result["shap_values"].notna().all()

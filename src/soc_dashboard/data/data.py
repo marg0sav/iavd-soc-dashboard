@@ -93,12 +93,12 @@ def get_incident_shap_values(entity_id: str) -> pd.DataFrame:
     service = get_pure_test_data_service()
 
     if model is None or service is None:
-        return pd.DataFrame(columns=["feature", "shap_value"])
+        return pd.DataFrame(columns=["features", "shap_values"])
 
     incidents = service.repository.get_all()
     features = incidents.loc[incidents[Col.ID] == entity_id]
 
     if features.empty:
-        return pd.DataFrame(columns=["feature", "shap_value"])
+        return pd.DataFrame(columns=["features", "shap_values"])
 
     return model.get_shap_values(features)

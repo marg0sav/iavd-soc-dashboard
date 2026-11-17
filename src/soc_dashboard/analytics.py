@@ -654,12 +654,12 @@ def build_confusion_matrix_figure(cm: MLModelConfusionMatrix) -> go.Figure:
     return fig
 
 def build_shap_figure(shap_df: pd.DataFrame) -> go.Figure:
-    top = (shap_df.assign(importance=shap_df["shap_value"].abs())
+    top = (shap_df.assign(importance=shap_df["shap_values"].abs())
            .nlargest(10, "importance").sort_values("importance"))
 
-    colors = ["#d65b5b" if value > 0 else "#438ac5" for value in top["shap_value"]]
+    colors = ["#d65b5b" if value > 0 else "#438ac5" for value in top["shap_values"]]
 
-    figure = go.Figure(go.Bar(x=top["shap_value"], y=top["feature"], orientation="h", marker_color=colors))
+    figure = go.Figure(go.Bar(x=top["shap_values"], y=top["features"], orientation="h", marker_color=colors))
 
     figure.update_layout(
         xaxis_title="SHAP value (log-odds)",

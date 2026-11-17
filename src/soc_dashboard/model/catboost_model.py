@@ -51,7 +51,7 @@ class SocCatBoostModel:
         shap_value = self._model.get_feature_importance(pool, type="ShapValues")[0]
 
         return pd.DataFrame({
-            "feature": self._feature_names,
-            "shap_value": shap_value[:-1]})
+            "features": self._feature_names,
+            "shap_values": shap_value[:-1]})
 
     
