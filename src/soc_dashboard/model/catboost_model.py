@@ -6,6 +6,23 @@ import numpy as np
 import pandas as pd
 from catboost import Pool
 
+_FEATURE_LABELS = {
+    "categoryMain": "Основная категория события",
+    "categoryLow": "Категория нижнего уровня",
+    "categoryHigh": "Категория верхнего уровня",
+    "Команда": "Командная строка",
+    "Имя файла-IRP": "Имя файла в карточке IRP",
+    "Файловый ресурс": "Файловый объект события",
+    "object.name": "Имя объекта события",
+    "object": "Тип объекта события",
+    "processName": "Имя процесса",
+    "commandName": "Имя утилиты из команды",
+}
+
+_INPUT_ALIASES = _FEATURE_LABELS | {
+    label: name for name, label in _FEATURE_LABELS.items()
+}
+
 
 class SocCatBoostModel:
     def __init__(self, artifact_dir: Path):
@@ -17,6 +34,9 @@ class SocCatBoostModel:
 
         self._categorical_features = [
             self._feature_names[i] for i in self._model.get_cat_feature_indices()
+        ]
+        self._text_features = [
+            self._feature_names[i] for i in self._model.get_text_feature_indices()
         ]
 
         classes = list(self._model.classes_)
@@ -41,7 +61,7 @@ class SocCatBoostModel:
     def predict_positive_probabilities(self, features: pd.DataFrame) -> np.ndarray:
         """Вероятность класса "Решён" для каждой строки features."""
         # Лишние столбцы отбрасываем, порядок - как при обучении
-        return self._model.predict_proba(features[self._feature_names])[
+        return self._model.predict_proba(self._make_pool(features))[
             :, self._positive_index
         ]
 
