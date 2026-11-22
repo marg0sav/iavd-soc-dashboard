@@ -65,13 +65,26 @@ class SocCatBoostModel:
             :, self._positive_index
         ]
 
-    def get_shap_values(self, features: pd.DataFrame) -> pd.DataFrame:
+    def _make_pool(self, features: pd.DataFrame) -> Pool:
+        columns = [
+            name if name in features.columns else _INPUT_ALIASES.get(name, name)
+            for name in self._feature_names
+        ]
+        prepared = features[columns].copy()
+        prepared.columns = self._feature_names
 
-        pool = Pool(
-            features[self._feature_names], cat_features=self._categorical_features
+        for column in [*self._categorical_features, *self._text_features]:
+            prepared[column] = prepared[column].astype("string").fillna("Missing")
+
+        return Pool(
+            prepared,
+            cat_features=self._categorical_features,
+            text_features=self._text_features,
         )
+
+    def get_shap_values(self, features: pd.DataFrame) -> pd.DataFrame:
+        pool = self._make_pool(features)
         shap_value = self._model.get_feature_importance(pool, type="ShapValues")[0]
 
-        return pd.DataFrame(
-            {"features": self._feature_names, "shap_values": shap_value[:-1]}
-        )
+        labels = [_FEATURE_LABELS.get(name, name) for name in self._feature_names]
+        return pd.DataFrame({"features": labels, "shap_values": shap_value[:-1]})
